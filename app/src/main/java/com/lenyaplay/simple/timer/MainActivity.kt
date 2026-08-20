@@ -98,7 +98,9 @@ fun TimerViewContent(
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
             if (timerUiState.state == TimerState.Running) {
@@ -106,9 +108,11 @@ fun TimerViewContent(
                     modifier = Modifier.align(Alignment.Center),
                     state = timerUiState
                 )
-                Row(modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 32.dp)) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 32.dp)
+                ) {
                     PauseTimerButton(onClick = onStart)
                     Spacer(modifier = Modifier.width(16.dp))
                     StopTimerButton(onClick = onStart)
@@ -126,9 +130,7 @@ fun TimerViewContent(
                         .padding(bottom = 32.dp)
                         .align(Alignment.BottomCenter),
                 )
-
             }
-
         }
     }
 }
