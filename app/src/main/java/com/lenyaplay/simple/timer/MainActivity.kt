@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lenyaplay.simple.timer.ui.components.TimerCounterContent
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 import androidx.compose.runtime.getValue
+import com.lenyaplay.simple.timer.ui.components.RunTimerButton
 
 class MainActivity : ComponentActivity() {
     private val notificationPermissionLauncher = registerForActivityResult(
@@ -45,7 +46,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun startTimerWithPermissionRequest(durationMillis: Long) {
+    private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
@@ -60,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TimerForKotlinLearningTheme {
-                TimerView()
+                TimerView(requestPermission = { requestNotificationPermissionIfNeeded() })
             }
         }
     }
@@ -68,7 +69,7 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun TimerView(vm: TimerInputState = viewModel()) {
+fun TimerView(vm: TimerInputState = viewModel(), requestPermission: () -> Unit) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
     TimerViewContent(
@@ -76,6 +77,7 @@ fun TimerView(vm: TimerInputState = viewModel()) {
         minutes = vm.minutes,
         seconds = vm.seconds,
         onStart = {
+            requestPermission()
             vm.onStartClick()
         },
         timerUiState = uiState,
@@ -101,7 +103,7 @@ fun TimerViewContent(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            if (timerUiState.isRunning)
+            if (timerUiState.state == TimerState.Running)
                 TimerCounterContent(state = timerUiState)
             else
                 TimeInput(
@@ -117,43 +119,38 @@ fun TimerViewContent(
     }
 }
 
-@Composable
-fun RunTimerButton(onStart: () -> Unit) {
-    Button(onClick = onStart) {
-        Text("Запустить таймер")
-    }
-}
-
-@Preview(showBackground = false)
-@Composable
-fun RunTimerButtonPreview() {
-    RunTimerButton(onStart = {})
-}
-
 @Preview(showBackground = true)
 @Composable
-fun TimerViewContentPreview() {
+fun TimerViewContentPreviewStarted() {
     TimerForKotlinLearningTheme {
         TimerViewContent(
             hours = TextFieldState(initialText = "1"),
             minutes = TextFieldState(initialText = "1"),
             seconds = TextFieldState(initialText = "12"),
             onStart = {},
-            timerUiState = TimerUiState(remainingMs = 65000, totalMs = 65000, isRunning = false)
+            timerUiState = TimerUiState(
+                remainingMs = 65000,
+                totalMs = 65000,
+                state = TimerState.Running
+            )
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun TimerViewContentPreviewWithStated() {
+fun TimerViewContentPreviewWithNotStarted() {
     TimerForKotlinLearningTheme {
         TimerViewContent(
             hours = TextFieldState(initialText = "1"),
             minutes = TextFieldState(initialText = "1"),
             seconds = TextFieldState(initialText = "12"),
             onStart = {},
-            timerUiState = TimerUiState(remainingMs = 65000, totalMs = 65000, isRunning = true)
+            timerUiState = TimerUiState(
+                remainingMs = 65000,
+                totalMs = 65000,
+                state = TimerState.Finished
+            )
         )
     }
 }

@@ -36,14 +36,31 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class TimerInputState(application: Application) : AndroidViewModel(application) {
-    val hours = TextFieldState(initialText = "12")
-    val minutes = TextFieldState(initialText = "23")
-    val seconds = TextFieldState(initialText = "34")
+    val hours = TextFieldState(initialText = "00")
+    val minutes = TextFieldState(initialText = "00")
+    val seconds = TextFieldState(initialText = "15")
 
     private val _uiState = MutableStateFlow(TimerUiState(remainingMs = 60_000L))
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
 
     private var tickerJob: Job? = null
+
+    private fun setAlarm(context: Context, delayInMs: Long) {
+        val intent = Intent(context, TimerReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            AlarmConstants.TIMER_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val triggerAtMillis = SystemClock.elapsedRealtime() + delayInMs
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent
+        )
+    }
 
     @SuppressLint("MissingPermission")
     fun onStartClick() {
@@ -63,31 +80,22 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
 
         val endTimeInMs = System.currentTimeMillis() + delayInMs
 
-        // Установка в AlaramManager
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        val intent = Intent(context, TimerReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            AlarmConstants.TIMER_REQUEST_CODE,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val triggerAtMillis = SystemClock.elapsedRealtime() + delayInMs
-
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent
-        )
+        setAlarm(context, delayInMs)
 
         // Работа со счетчиком
-        _uiState.update { it.copy(remainingMs = delayInMs, totalMs = delayInMs, isRunning = true) }
+        _uiState.update {
+            it.copy(
+                remainingMs = delayInMs,
+                totalMs = delayInMs,
+                state = TimerState.Running
+            )
+        }
         tickerJob?.cancel()
         tickerJob = viewModelScope.launch {
             while (isActive) {
                 val remaining = endTimeInMs - System.currentTimeMillis()
                 if (remaining <= 0) {
-                    _uiState.update { it.copy(remainingMs = 0) }
+                    _uiState.update { it.copy(remainingMs = 0, state = TimerState.Finished) }
                     break
                 }
                 _uiState.update { it.copy(remainingMs = remaining) }
