@@ -14,7 +14,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 
 @Composable
-fun TimerCounterContent(state: TimerUiState) {
+fun TimerCounterContent(modifier: Modifier = Modifier, state: TimerUiState) {
     val duration = state.remainingMs.milliseconds
 
     val hours = duration.inWholeHours
@@ -25,7 +25,7 @@ fun TimerCounterContent(state: TimerUiState) {
         .border(width = 0.5.dp, color = Color.Black)
         .padding(2.dp)
 
-    Row {
+    Row(modifier = modifier) {
         Text(
             text = hours.toString().padStart(2, '0'),
             modifier = textModifier

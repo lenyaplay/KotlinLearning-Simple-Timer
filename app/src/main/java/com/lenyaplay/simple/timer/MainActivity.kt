@@ -10,21 +10,21 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,7 +34,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lenyaplay.simple.timer.ui.components.TimerCounterContent
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import com.lenyaplay.simple.timer.ui.components.PauseTimerButton
 import com.lenyaplay.simple.timer.ui.components.RunTimerButton
+import com.lenyaplay.simple.timer.ui.components.StopTimerButton
 
 class MainActivity : ComponentActivity() {
     private val notificationPermissionLauncher = registerForActivityResult(
@@ -93,27 +96,38 @@ fun TimerViewContent(
     onStart: () -> Unit,
     timerUiState: TimerUiState,
 ) {
-    Scaffold(modifier = Modifier.fillMaxSize(), floatingActionButton = {
-        FloatingActionButton(onClick = { }) {
-            Icon(Icons.Default.Add, contentDescription = "Добавить таймер")
-        }
-    }) { innerPadding ->
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
+    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            if (timerUiState.state == TimerState.Running)
-                TimerCounterContent(state = timerUiState)
-            else
+            if (timerUiState.state == TimerState.Running) {
+                TimerCounterContent(
+                    modifier = Modifier.align(Alignment.Center),
+                    state = timerUiState
+                )
+                Row(modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 32.dp)) {
+                    PauseTimerButton(onClick = onStart)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    StopTimerButton(onClick = onStart)
+                }
+            } else {
                 TimeInput(
-                    modifier = Modifier.padding(innerPadding),
+                    modifier = Modifier.align(Alignment.Center),
                     hours = hours,
                     minutes = minutes,
                     seconds = seconds,
                 )
-            Spacer(modifier = Modifier.height(16.dp))
-            RunTimerButton(onStart = onStart)
+                RunTimerButton(
+                    onClick = onStart,
+                    modifier = Modifier
+                        .padding(bottom = 32.dp)
+                        .align(Alignment.BottomCenter),
+                )
+
+            }
 
         }
     }
