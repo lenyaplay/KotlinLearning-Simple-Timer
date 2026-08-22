@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun TimerCounterContent(modifier: Modifier = Modifier, state: TimerUiState) {
-    val duration = state.remainingMs.milliseconds
+    val duration = state.remainingDurationMs.milliseconds
 
     val hours = duration.inWholeHours
     val minutes = duration.inWholeMinutes % 60
@@ -44,5 +44,5 @@ fun TimerCounterContent(modifier: Modifier = Modifier, state: TimerUiState) {
 @Preview(showBackground = true)
 @Composable
 fun TimerCounterContentPreview() {
-    TimerCounterContent(state = TimerUiState(remainingMs = 65000, totalMs = 65000))
+    TimerCounterContent(state = TimerUiState(remainingDurationMs = 65000, totalDurationMs = 65000))
 }

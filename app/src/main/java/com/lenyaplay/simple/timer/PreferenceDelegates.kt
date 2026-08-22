@@ -176,3 +176,40 @@ fun SharedPreferences.boolean(
     read = { k, d -> getBoolean(k, d) },
     write = { k, v -> putBoolean(k, v) },
 )
+
+/**
+ * Делегат для значения типа enum.
+ *
+ * Хранится как [String] — имя константы ([Enum.name]).
+ *
+ * [enumClass] передаётся явно, а не выводится из [default]: вывод из рантайм-класса инстанса
+ * ненадёжен для enum'ов с телом у констант (`NORTH { override fun f() = ... }`) — рантайм-класс
+ * такой константы является анонимным подклассом enum'а, а не самим enum-классом, и
+ * [java.lang.Enum.valueOf] с таким классом падает. Явный параметр этой проблемы не имеет:
+ * `TimerState::class.java`, написанный на call site, — это литерал класса, а не рантайм-класс
+ * инстанса, и он всегда указывает на сам enum, независимо от того, есть ли у констант тела.
+ *
+ * @param key ключ в хранилище
+ * @param default значение при отсутствии ключа или несовпадении сохранённого имени с константами `T`
+ * @param enumClass класс enum'а
+ * @return делегат для свойства типа `T`
+ */
+fun <T : Enum<T>> SharedPreferences.enum(
+    key: String,
+    default: T,
+    enumClass: Class<T>,
+): ReadWriteProperty<Any?, T> = PreferenceDelegate(
+    prefs = this,
+    key = key,
+    default = default,
+    read = { k, d ->
+        getString(k, null)?.let { stored ->
+            try {
+                java.lang.Enum.valueOf(enumClass, stored)
+            } catch (e: IllegalArgumentException) {
+                d
+            }
+        } ?: d
+    },
+    write = { k, v -> putString(k, v.name) },
+)

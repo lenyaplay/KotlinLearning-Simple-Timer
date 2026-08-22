@@ -9,20 +9,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -83,6 +76,12 @@ fun TimerView(vm: TimerInputState = viewModel(), requestPermission: () -> Unit) 
             requestPermission()
             vm.onStartClick()
         },
+        onPause = {
+            vm.onPauseClick()
+        },
+        onStop = {
+            vm.onStopClick()
+        },
         timerUiState = uiState,
     )
 }
@@ -94,6 +93,8 @@ fun TimerViewContent(
     minutes: TextFieldState,
     seconds: TextFieldState,
     onStart: () -> Unit,
+    onPause: () -> Unit,
+    onStop: () -> Unit,
     timerUiState: TimerUiState,
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -103,21 +104,7 @@ fun TimerViewContent(
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
-            if (timerUiState.state == TimerState.Running) {
-                TimerCounterContent(
-                    modifier = Modifier.align(Alignment.Center),
-                    state = timerUiState
-                )
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 32.dp)
-                ) {
-                    PauseTimerButton(onClick = onStart)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    StopTimerButton(onClick = onStart)
-                }
-            } else {
+            if (timerUiState.state == TimerState.Idle) {
                 TimeInput(
                     modifier = Modifier.align(Alignment.Center),
                     hours = hours,
@@ -130,6 +117,20 @@ fun TimerViewContent(
                         .padding(bottom = 32.dp)
                         .align(Alignment.BottomCenter),
                 )
+            } else {
+                TimerCounterContent(
+                    modifier = Modifier.align(Alignment.Center),
+                    state = timerUiState
+                )
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 32.dp)
+                ) {
+                    PauseTimerButton(onClick = onPause)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    StopTimerButton(onClick = onStop)
+                }
             }
         }
     }
@@ -137,16 +138,18 @@ fun TimerViewContent(
 
 @Preview(showBackground = true)
 @Composable
-fun TimerViewContentPreviewStarted() {
+fun RunningTimerViewContentPreview() {
     TimerForKotlinLearningTheme {
         TimerViewContent(
             hours = TextFieldState(initialText = "1"),
             minutes = TextFieldState(initialText = "1"),
             seconds = TextFieldState(initialText = "12"),
             onStart = {},
+            onStop = {},
+            onPause = {},
             timerUiState = TimerUiState(
-                remainingMs = 65000,
-                totalMs = 65000,
+                remainingDurationMs = 65000,
+                totalDurationMs = 65000,
                 state = TimerState.Running
             )
         )
@@ -155,17 +158,19 @@ fun TimerViewContentPreviewStarted() {
 
 @Preview(showBackground = true)
 @Composable
-fun TimerViewContentPreviewWithNotStarted() {
+fun IdleTimerViewContentPreview() {
     TimerForKotlinLearningTheme {
         TimerViewContent(
             hours = TextFieldState(initialText = "1"),
             minutes = TextFieldState(initialText = "1"),
             seconds = TextFieldState(initialText = "12"),
             onStart = {},
+            onStop = {},
+            onPause = {},
             timerUiState = TimerUiState(
-                remainingMs = 65000,
-                totalMs = 65000,
-                state = TimerState.Finished
+                remainingDurationMs = 65000,
+                totalDurationMs = 65000,
+                state = TimerState.Idle
             )
         )
     }

@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
@@ -26,6 +27,7 @@ fun RunTimerButton(
         modifier = modifier
             .size(76.dp)
             .background(MaterialTheme.colorScheme.primary, CircleShape)
+            .clip(CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -48,6 +50,7 @@ fun PauseTimerButton(
         modifier = modifier
             .size(76.dp)
             .background(MaterialTheme.colorScheme.primary, CircleShape)
+            .clip(CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -69,6 +72,7 @@ fun StopTimerButton(
         modifier = modifier
             .size(76.dp)
             .background(MaterialTheme.colorScheme.primary, CircleShape)
+            .clip(CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {

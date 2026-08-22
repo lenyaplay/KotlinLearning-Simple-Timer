@@ -40,12 +40,12 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
     val minutes = TextFieldState(initialText = "00")
     val seconds = TextFieldState(initialText = "15")
 
-    private val _uiState = MutableStateFlow(TimerUiState(remainingMs = 60_000L))
+    private val _uiState = MutableStateFlow(TimerUiState(remainingDurationMs = 60_000L))
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
 
     private var tickerJob: Job? = null
 
-    private fun setAlarm(context: Context, delayInMs: Long) {
+    private fun setAlarm(context: Context, remainingDurationMs: Long) {
         val intent = Intent(context, TimerReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
@@ -54,7 +54,7 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val triggerAtMillis = SystemClock.elapsedRealtime() + delayInMs
+        val triggerAtMillis = SystemClock.elapsedRealtime() + remainingDurationMs
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.setExactAndAllowWhileIdle(
@@ -75,33 +75,69 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         // Сохранение в Shared Preferences
         val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val timerSettings = TimerSettings(sharedPreferences)
-        timerSettings.startTimeUtcInMs = System.currentTimeMillis()
-        timerSettings.delayInMs = delayInMs
-
-        val endTimeInMs = System.currentTimeMillis() + delayInMs
+        timerSettings.startElapsedMs = SystemClock.elapsedRealtime()
+        timerSettings.totalDurationMs = delayInMs
+        timerSettings.state = TimerState.Running
 
         setAlarm(context, delayInMs)
 
         // Работа со счетчиком
         _uiState.update {
             it.copy(
-                remainingMs = delayInMs,
-                totalMs = delayInMs,
+                remainingDurationMs = delayInMs,
+                totalDurationMs = delayInMs,
                 state = TimerState.Running
             )
         }
+        runJob(remainingDurationMs = delayInMs)
+    }
+
+    fun runJob(remainingDurationMs: Long) {
+        val start = SystemClock.elapsedRealtime()
+        val end = start + remainingDurationMs
         tickerJob?.cancel()
         tickerJob = viewModelScope.launch {
             while (isActive) {
-                val remaining = endTimeInMs - System.currentTimeMillis()
-                if (remaining <= 0) {
-                    _uiState.update { it.copy(remainingMs = 0, state = TimerState.Finished) }
+                if (remainingDurationMs <= 0) {
+                    _uiState.update {
+                        it.copy(
+                            remainingDurationMs = 0,
+                            state = TimerState.Finished
+                        )
+                    }
                     break
                 }
-                _uiState.update { it.copy(remainingMs = remaining) }
+                _uiState.update {
+                    val newRemainingDurationMs = end - SystemClock.elapsedRealtime()
+                    it.copy(remainingDurationMs = newRemainingDurationMs)
+                }
                 delay(200)
             }
         }
+    }
+
+    fun onPauseClick() {
+        tickerJob?.cancel()
+        _uiState.update { it.copy(state = TimerState.Paused) }
+
+        val context = getApplication<Application>()
+        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val timerSettings = TimerSettings(sharedPreferences)
+        timerSettings.state = TimerState.Paused
+        timerSettings.remainingDurationMs = uiState.value.remainingDurationMs
+    }
+
+    fun onStopClick() {
+        tickerJob?.cancel()
+        _uiState.update { it.copy(state = TimerState.Idle) }
+
+        val context = getApplication<Application>()
+        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val timerSettings = TimerSettings(sharedPreferences)
+        timerSettings.state = TimerState.Idle
+        timerSettings.remainingDurationMs = 0
+        timerSettings.totalDurationMs = 0
+        timerSettings.startElapsedMs = 0
     }
 }
 

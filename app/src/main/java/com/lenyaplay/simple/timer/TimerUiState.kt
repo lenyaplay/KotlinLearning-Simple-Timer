@@ -1,13 +1,14 @@
 package com.lenyaplay.simple.timer
 
 enum class TimerState {
+    Idle,
     Paused,
     Running,
     Finished,
 }
 
 data class TimerUiState(
-    val remainingMs: Long = 0L,
-    val totalMs: Long = 0L,
-    val state: TimerState = TimerState.Running,
+    val remainingDurationMs: Long = 0L,
+    val totalDurationMs: Long = 0L,
+    val state: TimerState = TimerState.Idle,
 )
