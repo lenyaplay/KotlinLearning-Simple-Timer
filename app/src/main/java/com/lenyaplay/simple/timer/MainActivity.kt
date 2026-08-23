@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.lenyaplay.simple.timer.ui.components.TimerCounterContent
+import com.lenyaplay.simple.timer.ui.components.TimerCounter
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -82,6 +82,9 @@ fun TimerView(vm: TimerInputState = viewModel(), requestPermission: () -> Unit) 
         onStop = {
             vm.onStopClick()
         },
+        onResume = {
+            vm.onResumeClick()
+        },
         timerUiState = uiState,
     )
 }
@@ -95,6 +98,7 @@ fun TimerViewContent(
     onStart: () -> Unit,
     onPause: () -> Unit,
     onStop: () -> Unit,
+    onResume: () -> Unit,
     timerUiState: TimerUiState,
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -118,7 +122,7 @@ fun TimerViewContent(
                         .align(Alignment.BottomCenter),
                 )
             } else {
-                TimerCounterContent(
+                TimerCounter(
                     modifier = Modifier.align(Alignment.Center),
                     state = timerUiState
                 )
@@ -127,7 +131,10 @@ fun TimerViewContent(
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 32.dp)
                 ) {
-                    PauseTimerButton(onClick = onPause)
+                    if (timerUiState.state == TimerState.Paused)
+                        RunTimerButton(onClick = onResume)
+                    else
+                        PauseTimerButton(onClick = onPause)
                     Spacer(modifier = Modifier.width(16.dp))
                     StopTimerButton(onClick = onStop)
                 }
@@ -147,6 +154,7 @@ fun RunningTimerViewContentPreview() {
             onStart = {},
             onStop = {},
             onPause = {},
+            onResume = {},
             timerUiState = TimerUiState(
                 remainingDurationMs = 65000,
                 totalDurationMs = 65000,
@@ -167,6 +175,7 @@ fun IdleTimerViewContentPreview() {
             onStart = {},
             onStop = {},
             onPause = {},
+            onResume = {},
             timerUiState = TimerUiState(
                 remainingDurationMs = 65000,
                 totalDurationMs = 65000,

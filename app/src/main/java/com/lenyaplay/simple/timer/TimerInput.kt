@@ -127,6 +127,16 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         timerSettings.remainingDurationMs = uiState.value.remainingDurationMs
     }
 
+    fun onResumeClick() {
+        runJob(uiState.value.remainingDurationMs)
+
+        val context = getApplication<Application>()
+        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val timerSettings = TimerSettings(sharedPreferences)
+        timerSettings.state = TimerState.Running
+        _uiState.update { it.copy(state = TimerState.Running) }
+    }
+
     fun onStopClick() {
         tickerJob?.cancel()
         _uiState.update { it.copy(state = TimerState.Idle) }
