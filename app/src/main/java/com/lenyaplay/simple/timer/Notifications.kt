@@ -2,6 +2,7 @@ package com.lenyaplay.simple.timer
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -12,6 +13,7 @@ fun showTimerNotification(
     notificationId: Int,
     title: String,
     text: String,
+    fullScreenIntent: PendingIntent? = null,
 ) {
     val channelId = NotificationConstants.CHANNEL_ID
 
@@ -25,13 +27,18 @@ fun showTimerNotification(
         notificationManager.createNotificationChannel(channel)
     }
 
-    val notification = NotificationCompat.Builder(context, channelId)
+    val builder = NotificationCompat.Builder(context, channelId)
         .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
         .setContentTitle(title)
         .setContentText(text)
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setAutoCancel(true)
-        .build()
 
-    NotificationManagerCompat.from(context).notify(notificationId, notification)
+    if (fullScreenIntent != null) {
+        builder
+            .setFullScreenIntent(fullScreenIntent, true)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+    }
+
+    NotificationManagerCompat.from(context).notify(notificationId, builder.build())
 }
