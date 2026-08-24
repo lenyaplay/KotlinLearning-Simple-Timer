@@ -4,7 +4,6 @@ enum class TimerState {
     Idle,
     Paused,
     Running,
-    Finished,
 }
 
 data class TimerUiState(

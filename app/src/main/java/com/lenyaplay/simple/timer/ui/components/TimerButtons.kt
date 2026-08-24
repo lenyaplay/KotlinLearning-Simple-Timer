@@ -21,14 +21,21 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun RunTimerButton(
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
+    val background = if (enabled) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+    }
+
     Box(
         modifier = modifier
             .size(76.dp)
-            .background(MaterialTheme.colorScheme.primary, CircleShape)
+            .background(background, CircleShape)
             .clip(CircleShape)
-            .clickable(onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(

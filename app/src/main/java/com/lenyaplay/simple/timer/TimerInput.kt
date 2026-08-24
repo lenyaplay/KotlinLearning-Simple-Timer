@@ -7,22 +7,10 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.lenyaplay.simple.timer.ui.components.parseDurationMs
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,9 +19,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 class TimerInputState(application: Application) : AndroidViewModel(application) {
     val hours = TextFieldState(initialText = "00")
@@ -89,10 +74,7 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
     @SuppressLint("MissingPermission")
     fun onStartClick() {
         // Парсинг данных
-        val h = hours.text.toString().toLongOrNull() ?: 0L
-        val m = minutes.text.toString().toLongOrNull() ?: 0L
-        val s = seconds.text.toString().toLongOrNull() ?: 0L
-        val delayInMs = (h.hours + m.minutes + s.seconds).inWholeMilliseconds
+        val delayInMs = parseDurationMs(hours, minutes, seconds)
 
         val context = getApplication<Application>()
 
@@ -125,9 +107,10 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
                     _uiState.update {
                         it.copy(
                             remainingDurationMs = 0,
-                            state = TimerState.Finished
+                            state = TimerState.Idle
                         )
                     }
+                    resetTimerSettings()
                     break
                 }
                 _uiState.update {
@@ -167,57 +150,13 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
 
         cancelAlarm(getApplication())
 
+        resetTimerSettings()
+    }
+
+    private fun resetTimerSettings() {
         timerSettings.state = TimerState.Idle
         timerSettings.remainingDurationMs = 0
         timerSettings.totalDurationMs = 0
         timerSettings.startElapsedMs = 0
-    }
-}
-
-
-@Composable
-fun TimeInput(
-    modifier: Modifier = Modifier,
-    hours: TextFieldState,
-    minutes: TextFieldState,
-    seconds: TextFieldState
-) {
-    Row(modifier = modifier) {
-        BasicTextField(
-            state = hours,
-            textStyle = TextStyle(
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
-            ),
-            modifier = Modifier
-                .border(border = BorderStroke(2.dp, Color.Black))
-                .padding(5.dp)
-                .width(60.dp)
-        )
-        BasicTextField(
-            state = minutes,
-            textStyle = TextStyle(
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
-            ),
-            modifier = Modifier
-                .border(border = BorderStroke(2.dp, Color.Black))
-                .padding(5.dp)
-                .width(60.dp)
-        )
-        BasicTextField(
-            state = seconds,
-            textStyle = TextStyle(
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
-            ),
-            modifier = Modifier
-                .border(border = BorderStroke(2.dp, Color.Black))
-                .padding(5.dp)
-                .width(60.dp)
-        )
     }
 }

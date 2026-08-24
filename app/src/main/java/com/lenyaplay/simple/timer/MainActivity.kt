@@ -12,6 +12,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +32,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.lenyaplay.simple.timer.ui.components.TimeInput
+import com.lenyaplay.simple.timer.ui.components.TimePresets
 import com.lenyaplay.simple.timer.ui.components.TimerCounter
+import com.lenyaplay.simple.timer.ui.components.parseDurationMs
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -189,14 +194,25 @@ fun TimerViewContent(
             contentAlignment = Alignment.Center
         ) {
             if (timerUiState.state == TimerState.Idle) {
-                TimeInput(
+                Column(
                     modifier = Modifier.align(Alignment.Center),
-                    hours = hours,
-                    minutes = minutes,
-                    seconds = seconds,
-                )
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    TimeInput(
+                        hours = hours,
+                        minutes = minutes,
+                        seconds = seconds,
+                    )
+                    TimePresets(
+                        hours = hours,
+                        minutes = minutes,
+                        seconds = seconds,
+                    )
+                }
                 RunTimerButton(
                     onClick = onStart,
+                    enabled = parseDurationMs(hours, minutes, seconds) > 0,
                     modifier = Modifier
                         .padding(bottom = 32.dp)
                         .align(Alignment.BottomCenter),
