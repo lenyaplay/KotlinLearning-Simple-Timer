@@ -14,4 +14,7 @@ internal class TimerSettings(prefs: SharedPreferences) {
 
     // Таймер запущен/на паузе/остановлен
     var state: TimerState by prefs.enum("state", TimerState.Idle, TimerState::class.java)
+
+    // Пользователь отказался выдавать разрешение "поверх других приложений"
+    var overlayPermissionDeclined: Boolean by prefs.boolean("overlay_permission_declined", false)
 }

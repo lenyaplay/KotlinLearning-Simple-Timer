@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.provider.Settings
 
 
 class TimerReceiver : BroadcastReceiver() {
@@ -30,5 +31,13 @@ class TimerReceiver : BroadcastReceiver() {
             text = "Время вышло!",
             fullScreenIntent = fullScreenIntent,
         )
+
+        // Разрешение "поверх других приложений" снимает запрет на запуск Activity из фона,
+        // и экран показывается даже когда пользователь занят другим приложением.
+        // Без него остается full screen intent - он разворачивается только на
+        // заблокированном экране
+        if (Settings.canDrawOverlays(context)) {
+            context.startActivity(activityIntent)
+        }
     }
 }

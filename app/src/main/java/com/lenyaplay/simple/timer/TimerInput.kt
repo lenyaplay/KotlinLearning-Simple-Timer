@@ -78,6 +78,12 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         pendingIntent.cancel()
     }
 
+    var overlayPermissionDeclined: Boolean
+        get() = timerSettings.overlayPermissionDeclined
+        set(value) {
+            timerSettings.overlayPermissionDeclined = value
+        }
+
     @SuppressLint("MissingPermission")
     fun onStartClick() {
         // Парсинг данных

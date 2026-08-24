@@ -1,7 +1,9 @@
 package com.lenyaplay.simple.timer
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.provider.Settings
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -16,7 +18,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,13 +31,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lenyaplay.simple.timer.ui.components.TimerCounter
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import com.lenyaplay.simple.timer.ui.components.PauseTimerButton
 import com.lenyaplay.simple.timer.ui.components.RunTimerButton
 import com.lenyaplay.simple.timer.ui.components.StopTimerButton
 
 class MainActivity : ComponentActivity() {
+    private val notificationStepDone = mutableStateOf(false)
+
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -40,6 +53,7 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, "Без разрешения уведомление не покажется", Toast.LENGTH_SHORT)
                 .show()
         }
+        notificationStepDone.value = true
     }
 
     private fun requestNotificationPermissionIfNeeded() {
@@ -48,16 +62,31 @@ class MainActivity : ComponentActivity() {
             != PackageManager.PERMISSION_GRANTED
         ) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            notificationStepDone.value = true
         }
+    }
+
+    private fun openOverlaySettings() {
+        startActivity(
+            Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                "package:$packageName".toUri()
+            )
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        requestNotificationPermissionIfNeeded()
 
         setContent {
             TimerForKotlinLearningTheme {
-                TimerView(requestPermission = { requestNotificationPermissionIfNeeded() })
+                TimerView(
+                    notificationStepDone = notificationStepDone.value,
+                    openOverlaySettings = { openOverlaySettings() },
+                )
             }
         }
     }
@@ -65,15 +94,42 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun TimerView(vm: TimerInputState = viewModel(), requestPermission: () -> Unit) {
+fun TimerView(
+    vm: TimerInputState = viewModel(),
+    notificationStepDone: Boolean,
+    openOverlaySettings: () -> Unit,
+) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var showOverlayDialog by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(notificationStepDone) {
+        if (notificationStepDone &&
+            !Settings.canDrawOverlays(context) &&
+            !vm.overlayPermissionDeclined
+        ) {
+            showOverlayDialog = true
+        }
+    }
+
+    if (showOverlayDialog) {
+        OverlayPermissionDialog(
+            onConfirm = {
+                showOverlayDialog = false
+                openOverlaySettings()
+            },
+            onDismiss = {
+                showOverlayDialog = false
+                vm.overlayPermissionDeclined = true
+            },
+        )
+    }
 
     TimerViewContent(
         hours = vm.hours,
         minutes = vm.minutes,
         seconds = vm.seconds,
         onStart = {
-            requestPermission()
             vm.onStartClick()
         },
         onPause = {
@@ -89,6 +145,27 @@ fun TimerView(vm: TimerInputState = viewModel(), requestPermission: () -> Unit) 
     )
 }
 
+
+@Composable
+fun OverlayPermissionDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Показывать таймер поверх приложений") },
+        text = {
+            Text(
+                text = "Без этого разрешения, когда время выйдет и вы будете пользоваться " +
+                        "телефоном, придёт только обычное уведомление. " +
+                        "С ним таймер развернётся на весь экран."
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(text = "Открыть настройки") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(text = "Не надо") }
+        },
+    )
+}
 
 @Composable
 fun TimerViewContent(
