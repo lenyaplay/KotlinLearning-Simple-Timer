@@ -1,7 +1,10 @@
 package com.lenyaplay.simple.timer
 
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,26 +24,78 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 
 class TimerFinishedActivity : ComponentActivity() {
+
+    private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         showOverLockscreen()
         enableEdgeToEdge()
+        startAlarmSound()
 
         setContent {
             TimerForKotlinLearningTheme {
-                TimerFinishedScreen(onDismiss = { finish() })
+                TimerFinishedScreen(onDismiss = {
+                    stopAlarmSound()
+                    // Уведомление открылось через full-screen intent, а не тапом по
+                    // нему, поэтому setAutoCancel его не убирает - снимаем сами
+                    NotificationManagerCompat.from(this@TimerFinishedActivity).cancel(
+                        NotificationConstants.TIMER_FINISHED_ID
+                    )
+                    finish()
+                })
             }
         }
+    }
+
+    override fun onDestroy() {
+        stopAlarmSound()
+        super.onDestroy()
+    }
+
+    private fun startAlarmSound() {
+        try {
+            mediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                setDataSource(this@TimerFinishedActivity, Settings.System.DEFAULT_ALARM_ALERT_URI)
+                isLooping = true
+                setOnPreparedListener { it.start() }
+                prepareAsync()
+            }
+        } catch (e: Exception) {
+            // Нет доступного звука будильника (например на эмуляторе) - экран и так
+            // выполняет свою роль, падать из-за отсутствия звука не нужно
+            trace("ТаймерЗавершён") { "не удалось запустить звук: ${e.message}" }
+        }
+    }
+
+    private fun stopAlarmSound() {
+        mediaPlayer?.let {
+            try {
+                if (it.isPlaying) it.stop()
+            } catch (e: IllegalStateException) {
+                // MediaPlayer мог не успеть подготовиться (prepareAsync асинхронный) -
+                // stop() на неподготовленном плеере кидает исключение, это не ошибка
+            }
+            it.release()
+        }
+        mediaPlayer = null
     }
 
     private fun showOverLockscreen() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         } else {
             @Suppress("DEPRECATION")
             window.addFlags(

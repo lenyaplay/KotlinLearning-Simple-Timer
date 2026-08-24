@@ -5,18 +5,30 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 
 
 class TimerReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        showTimerFinishedNotification(context)
-    }
-
-    private fun showTimerFinishedNotification(context: Context) {
         val activityIntent = Intent(context, TimerFinishedActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
+
+        val isAppInForeground = ProcessLifecycleOwner.get().lifecycle.currentState
+            .isAtLeast(Lifecycle.State.STARTED)
+
+        if (isAppInForeground) {
+            // Приложение и так на экране - уведомление избыточно, открываем сразу
+            trace("ТаймерЗавершён") { "приложение открыто, уведомление пропущено" }
+            context.startActivity(activityIntent)
+        } else {
+            showTimerFinishedNotification(context, activityIntent)
+        }
+    }
+
+    private fun showTimerFinishedNotification(context: Context, activityIntent: Intent) {
         val fullScreenIntent = PendingIntent.getActivity(
             context,
             NotificationConstants.FULL_SCREEN_REQUEST_CODE,
@@ -29,6 +41,7 @@ class TimerReceiver : BroadcastReceiver() {
             notificationId = NotificationConstants.TIMER_FINISHED_ID,
             title = "Таймер завершён",
             text = "Время вышло!",
+            channelId = NotificationConstants.ALARM_CHANNEL_ID,
             fullScreenIntent = fullScreenIntent,
         )
 

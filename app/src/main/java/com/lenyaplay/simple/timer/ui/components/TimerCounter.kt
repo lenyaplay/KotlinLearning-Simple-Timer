@@ -70,14 +70,14 @@ fun TimerCounter(modifier: Modifier = Modifier, state: TimerUiState) {
     // замедлением или другая длительность дают серию рывков
     val animatedProgress = remember { Animatable(progress) }
     LaunchedEffect(progress, isPaused) {
-        if (isPaused) {
-            animatedProgress.snapTo(progress)
-        } else {
+        if (!isPaused) {
             animatedProgress.animateTo(
                 targetValue = progress,
                 animationSpec = tween(TICK_INTERVAL_MS, easing = LinearEasing),
             )
         }
+        // На паузе ничего не делаем: смена ключа сама отменит текущий animateTo, и дуга
+        // замрет там, где была - без snapTo, который дергал ее к цели рывком
     }
 
     val trackColor = MaterialTheme.colorScheme.surfaceVariant
