@@ -45,21 +45,37 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
 
     private var tickerJob: Job? = null
 
-    private fun setAlarm(context: Context, remainingDurationMs: Long) {
-        val intent = Intent(context, TimerReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
+    private val timerSettings by lazy {
+        TimerSettings(
+            getApplication<Application>()
+                .getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        )
+    }
+
+    private fun timerPendingIntent(context: Context): PendingIntent =
+        PendingIntent.getBroadcast(
             context,
             AlarmConstants.TIMER_REQUEST_CODE,
-            intent,
+            Intent(context, TimerReceiver::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+    private fun setAlarm(context: Context, remainingDurationMs: Long) {
+        val pendingIntent = timerPendingIntent(context)
         val triggerAtMillis = SystemClock.elapsedRealtime() + remainingDurationMs
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent
         )
+    }
+
+    private fun cancelAlarm(context: Context) {
+        val pendingIntent = timerPendingIntent(context)
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(pendingIntent)
+        pendingIntent.cancel()
     }
 
     @SuppressLint("MissingPermission")
@@ -73,9 +89,8 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         val context = getApplication<Application>()
 
         // Сохранение в Shared Preferences
-        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val timerSettings = TimerSettings(sharedPreferences)
         timerSettings.startElapsedMs = SystemClock.elapsedRealtime()
+        timerSettings.remainingDurationMs = delayInMs
         timerSettings.totalDurationMs = delayInMs
         timerSettings.state = TimerState.Running
 
@@ -120,19 +135,20 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         tickerJob?.cancel()
         _uiState.update { it.copy(state = TimerState.Paused) }
 
-        val context = getApplication<Application>()
-        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val timerSettings = TimerSettings(sharedPreferences)
+        cancelAlarm(getApplication())
+
         timerSettings.state = TimerState.Paused
         timerSettings.remainingDurationMs = uiState.value.remainingDurationMs
     }
 
     fun onResumeClick() {
-        runJob(uiState.value.remainingDurationMs)
+        val remainingDurationMs = uiState.value.remainingDurationMs
 
-        val context = getApplication<Application>()
-        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val timerSettings = TimerSettings(sharedPreferences)
+        setAlarm(getApplication(), remainingDurationMs)
+        runJob(remainingDurationMs)
+
+        timerSettings.startElapsedMs = SystemClock.elapsedRealtime()
+        timerSettings.remainingDurationMs = remainingDurationMs
         timerSettings.state = TimerState.Running
         _uiState.update { it.copy(state = TimerState.Running) }
     }
@@ -141,15 +157,15 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         tickerJob?.cancel()
         _uiState.update { it.copy(state = TimerState.Idle) }
 
-        val context = getApplication<Application>()
-        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val timerSettings = TimerSettings(sharedPreferences)
+        cancelAlarm(getApplication())
+
         timerSettings.state = TimerState.Idle
         timerSettings.remainingDurationMs = 0
         timerSettings.totalDurationMs = 0
         timerSettings.startElapsedMs = 0
     }
 }
+
 
 
 @Composable
