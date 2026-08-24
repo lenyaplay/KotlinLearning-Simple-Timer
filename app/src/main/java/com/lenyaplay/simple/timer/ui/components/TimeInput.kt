@@ -68,6 +68,7 @@ private fun LabeledWheel(
     count: Int,
     onValueChange: (Int) -> Unit,
     label: String,
+    contentDescription: String,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(LABEL_HEIGHT))
@@ -75,7 +76,7 @@ private fun LabeledWheel(
             value = value,
             count = count,
             onValueChange = onValueChange,
-            contentDescription = label,
+            contentDescription = contentDescription,
             itemHeight = ITEM_HEIGHT,
             visibleItemCount = VISIBLE_ITEM_COUNT,
             modifier = Modifier.width(64.dp),
@@ -123,6 +124,7 @@ fun TimeInput(
                 count = 24,
                 onValueChange = onHoursChange,
                 label = "ч",
+                contentDescription = "Часы",
             )
             TimeSeparator()
             LabeledWheel(
@@ -130,6 +132,7 @@ fun TimeInput(
                 count = 60,
                 onValueChange = onMinutesChange,
                 label = "мин",
+                contentDescription = "Минуты",
             )
             TimeSeparator()
             LabeledWheel(
@@ -137,6 +140,7 @@ fun TimeInput(
                 count = 60,
                 onValueChange = onSecondsChange,
                 label = "с",
+                contentDescription = "Секунды",
             )
         }
 
