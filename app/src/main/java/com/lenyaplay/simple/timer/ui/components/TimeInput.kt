@@ -4,6 +4,8 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,9 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +41,7 @@ private val PRESETS_IN_MINUTES = listOf(1, 3, 5, 10, 15)
 
 private val ITEM_HEIGHT = 48.dp
 private val LABEL_HEIGHT = 16.dp
+private val PRESETS_MAX_WIDTH = 260.dp
 private const val VISIBLE_ITEM_COUNT = 5
 
 fun parseDurationMs(hours: Int, minutes: Int, seconds: Int): Long =
@@ -97,14 +102,19 @@ fun TimeInput(
     val backgroundColor = MaterialTheme.colorScheme.background
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        // Выделение центральной строки - две тонкие линии на все три барабана
-        Column(
-            verticalArrangement = Arrangement.spacedBy(ITEM_HEIGHT),
-            modifier = Modifier.fillMaxWidth(),
+        // Выделение центральной строки - по ширине блока барабанов.
+        // matchParentSize задает жесткие размеры, поэтому высота задается уже внутри
+        Box(
+            modifier = Modifier.matchParentSize(),
+            contentAlignment = Alignment.Center,
         ) {
-            repeat(2) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            }
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(ITEM_HEIGHT),
+            ) {}
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -133,8 +143,7 @@ fun TimeInput(
         // Дальние элементы барабанов растворяются в фоне экрана
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(ITEM_HEIGHT * VISIBLE_ITEM_COUNT)
+                .matchParentSize()
                 .background(
                     Brush.verticalGradient(
                         0f to backgroundColor,
@@ -147,6 +156,7 @@ fun TimeInput(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TimePresets(
     modifier: Modifier = Modifier,
@@ -155,9 +165,10 @@ fun TimePresets(
     seconds: Int,
     onPresetClick: (minutes: Int) -> Unit,
 ) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    FlowRow(
+        modifier = modifier.widthIn(max = PRESETS_MAX_WIDTH),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         PRESETS_IN_MINUTES.forEach { preset ->
             FilterChip(
