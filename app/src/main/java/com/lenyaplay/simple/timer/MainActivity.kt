@@ -27,11 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lenyaplay.simple.timer.ui.components.TimerCounter
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -103,13 +103,16 @@ fun TimerView(
     val context = LocalContext.current
     var showOverlayDialog by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(notificationStepDone) {
+    LifecycleResumeEffect(notificationStepDone) {
         if (notificationStepDone &&
             !Settings.canDrawOverlays(context) &&
-            !vm.overlayPermissionDeclined
+            !vm.overlayPermissionDeclined &&
+            !vm.overlayAsked
         ) {
+            vm.overlayAsked = true
             showOverlayDialog = true
         }
+        onPauseOrDispose { }
     }
 
     if (showOverlayDialog) {

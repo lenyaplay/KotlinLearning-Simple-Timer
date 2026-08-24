@@ -78,6 +78,8 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         pendingIntent.cancel()
     }
 
+    var overlayAsked: Boolean = false
+
     var overlayPermissionDeclined: Boolean
         get() = timerSettings.overlayPermissionDeclined
         set(value) {

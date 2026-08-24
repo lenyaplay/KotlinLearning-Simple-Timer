@@ -15,7 +15,7 @@ class TimerReceiver : BroadcastReceiver() {
 
     private fun showTimerFinishedNotification(context: Context) {
         val activityIntent = Intent(context, TimerFinishedActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         val fullScreenIntent = PendingIntent.getActivity(
             context,
