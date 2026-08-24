@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
@@ -12,6 +14,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.TouchInjectionScope
@@ -19,6 +22,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
+import com.lenyaplay.simple.timer.ui.components.TimerCounter
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 import androidx.compose.ui.semantics.getOrNull
 import kotlin.math.abs
@@ -365,6 +369,48 @@ class TimerScreenTest {
         composeRule.waitForIdle()
 
         assertWheelShows("Минуты", 11)
+    }
+
+    /** Пресет - это действие, а не состояние: при ручной прокрутке чипы не подсвечиваются */
+    @Test
+    fun presetChipsDoNotReactToManualScrolling() {
+        setScreen(m = 4)
+        val itemHeight = itemHeightPx()
+
+        composeRule.onNodeWithContentDescription("Минуты").performTouchInput {
+            slowDrag(dy = itemHeight + touchSlopPx())
+        }
+        composeRule.waitForIdle()
+
+        assertWheelShows("Минуты", 5)
+        composeRule.onNodeWithText("5 мин")
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Selected))
+    }
+
+    /** Цифры счетчика должны помещаться внутрь кольца, а не вылезать за дугу */
+    @Test
+    fun counterTextFitsInsideRing() {
+        composeRule.setContent {
+            TimerForKotlinLearningTheme {
+                TimerCounter(
+                    state = TimerUiState(
+                        remainingDurationMs = 86_399_000,
+                        totalDurationMs = 86_400_000,
+                        state = TimerState.Running,
+                    )
+                )
+            }
+        }
+        composeRule.waitForIdle()
+
+        val ring = composeRule.onNodeWithTag("ring").fetchSemanticsNode().size
+        val text = composeRule.onNodeWithTag("counter").fetchSemanticsNode().size
+        val ringWidth = with(composeRule.density) { 14.dp.toPx() }
+
+        assertTrue(
+            "Текст шириной ${text.width} не помещается в кольцо шириной ${ring.width}",
+            text.width <= ring.width - 2 * ringWidth,
+        )
     }
 
     /**

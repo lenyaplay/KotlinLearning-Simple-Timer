@@ -1,52 +1,178 @@
 package com.lenyaplay.simple.timer.ui.components
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import android.content.res.Configuration
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.lenyaplay.simple.timer.TimerState
 import com.lenyaplay.simple.timer.TimerUiState
-import kotlin.time.Duration.Companion.milliseconds
+import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
+import kotlin.math.ceil
 
+private val RING_MAX_SIZE = 320.dp
+private val RING_WIDTH = 14.dp
+
+/** Зазор между дугой и цифрами */
+private val TEXT_INSET = 12.dp
+
+/** Размер, на котором строка измеряется перед подгонкой */
+private val PROBE_FONT_SIZE = 100.sp
+private val MAX_FONT_SIZE = 56.sp
+
+/**
+ * Остаток округляется вверх: иначе заданное пользователем число исчезает с экрана сразу
+ * после старта, а ноль показывается за секунду до сигнала
+ */
+fun formatRemaining(remainingMs: Long): String {
+    val totalSeconds = ceil(remainingMs.coerceAtLeast(0) / 1000.0).toLong()
+    return "%02d:%02d:%02d".format(
+        totalSeconds / 3600,
+        (totalSeconds % 3600) / 60,
+        totalSeconds % 60,
+    )
+}
 
 @Composable
 fun TimerCounter(modifier: Modifier = Modifier, state: TimerUiState) {
-    val duration = state.remainingDurationMs.milliseconds
+    val isPaused = state.state == TimerState.Paused
 
-    val hours = duration.inWholeHours
-    val minutes = duration.inWholeMinutes % 60
-    val seconds = duration.inWholeSeconds % 60
+    val progress = if (state.totalDurationMs > 0) {
+        state.remainingDurationMs.coerceAtLeast(0).toFloat() / state.totalDurationMs
+    } else {
+        0f
+    }
+    // Тикер обновляет состояние раз в 200 мс, без сглаживания дуга двигалась бы рывками
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 250),
+        label = "progress",
+    )
 
-    val textModifier = Modifier
-        .border(width = 0.5.dp, color = MaterialTheme.colorScheme.outline)
-        .padding(2.dp)
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+    val arcColor = if (isPaused) {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
 
-    Row(modifier = modifier) {
+    val textStyle = MaterialTheme.typography.displayLarge.copy(
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Bold,
+    )
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+
+    BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
+        val ringSize = minOf(maxWidth, maxHeight).coerceAtMost(RING_MAX_SIZE)
+
+        // Размер подбирается измерением, а не коэффициентом "ширина символа ~ 0.6 em":
+        // такие коэффициенты врут при смене шрифта и системного масштаба текста
+        val fontSize: TextUnit = remember(ringSize, textStyle, density) {
+            val probe = measurer.measure(
+                "00:00:00",
+                textStyle.copy(fontSize = PROBE_FONT_SIZE),
+            )
+            val available = with(density) {
+                (ringSize - RING_WIDTH * 2 - TEXT_INSET * 2).toPx()
+            }
+            val scaled = PROBE_FONT_SIZE.value * available / probe.size.width
+            scaled.coerceAtMost(MAX_FONT_SIZE.value).sp
+        }
+
+        if (state.totalDurationMs > 0) {
+            Canvas(
+                modifier = Modifier
+                    .size(ringSize)
+                    .testTag("ring")
+            ) {
+                val stroke = Stroke(width = RING_WIDTH.toPx(), cap = StrokeCap.Round)
+                val inset = RING_WIDTH.toPx() / 2
+                val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
+
+                drawArc(
+                    color = trackColor,
+                    startAngle = 0f,
+                    sweepAngle = 360f,
+                    useCenter = false,
+                    topLeft = Offset(inset, inset),
+                    size = arcSize,
+                    style = stroke,
+                )
+                drawArc(
+                    color = arcColor,
+                    startAngle = -90f,
+                    sweepAngle = animatedProgress * 360f,
+                    useCenter = false,
+                    topLeft = Offset(inset, inset),
+                    size = arcSize,
+                    style = stroke,
+                )
+            }
+        }
+
         Text(
-            text = hours.toString().padStart(2, '0'),
-            modifier = textModifier
-        )
-        Text(
-            text = minutes.toString().padStart(2, '0'),
-            modifier = textModifier
-        )
-        Text(
-            text = seconds.toString().padStart(2, '0'),
-            modifier = textModifier
+            text = formatRemaining(state.remainingDurationMs),
+            style = textStyle,
+            fontSize = fontSize,
+            color = if (isPaused) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
+            maxLines = 1,
+            modifier = Modifier.testTag("counter"),
         )
     }
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun TimerCounterPreview() {
-    TimerCounter(
-        state = TimerUiState(
-            remainingDurationMs = 65000, totalDurationMs = 65000
+fun TimerCounterRunningPreview() {
+    TimerForKotlinLearningTheme {
+        TimerCounter(
+            state = TimerUiState(
+                remainingDurationMs = 65_000,
+                totalDurationMs = 90_000,
+                state = TimerState.Running,
+            )
         )
-    )
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun TimerCounterPausedPreview() {
+    TimerForKotlinLearningTheme {
+        TimerCounter(
+            state = TimerUiState(
+                remainingDurationMs = 65_000,
+                totalDurationMs = 90_000,
+                state = TimerState.Paused,
+            )
+        )
+    }
 }

@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -171,9 +171,6 @@ fun TimeInput(
 @Composable
 fun TimePresets(
     modifier: Modifier = Modifier,
-    hours: Int,
-    minutes: Int,
-    seconds: Int,
     onPresetClick: (minutes: Int) -> Unit,
 ) {
     FlowRow(
@@ -182,10 +179,11 @@ fun TimePresets(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         PRESETS_IN_MINUTES.forEach { preset ->
-            FilterChip(
-                selected = hours == 0 && minutes == preset && seconds == 0,
+            // Именно AssistChip, а не FilterChip: пресет - это действие "поставь 5 минут".
+            // Подсветка выбранного мигала бы, когда барабан проезжает через эти значения
+            AssistChip(
                 onClick = {
-                    trace("Пресеты") { "click $preset мин (было $hours:$minutes:$seconds)" }
+                    trace("Пресеты") { "click $preset мин" }
                     onPresetClick(preset)
                 },
                 label = { Text(text = "$preset мин") },
@@ -217,9 +215,6 @@ fun TimeInputPreview() {
                 onSecondsChange = { seconds = it },
             )
             TimePresets(
-                hours = hours,
-                minutes = minutes,
-                seconds = seconds,
                 onPresetClick = {
                     hours = 0
                     minutes = it

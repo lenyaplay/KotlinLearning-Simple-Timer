@@ -225,12 +225,7 @@ fun TimerViewContent(
                         onSecondsChange = onSecondsChange,
                         syncKey = syncKey,
                     )
-                    TimePresets(
-                        hours = hours,
-                        minutes = minutes,
-                        seconds = seconds,
-                        onPresetClick = onPresetClick,
-                    )
+                    TimePresets(onPresetClick = onPresetClick)
                 }
                 RunTimerButton(
                     onClick = onStart,
