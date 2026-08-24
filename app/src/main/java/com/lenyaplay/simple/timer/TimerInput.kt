@@ -51,6 +51,32 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         )
     }
 
+    init {
+        restoreState()
+    }
+
+    private fun restoreState() {
+        val restored = restoredTimerUiState(
+            persistedState = timerSettings.state,
+            remainingDurationMs = timerSettings.remainingDurationMs,
+            totalDurationMs = timerSettings.totalDurationMs,
+            startElapsedMs = timerSettings.startElapsedMs,
+            nowElapsedMs = SystemClock.elapsedRealtime(),
+        )
+
+        if (restored == null) {
+            // Таймер шел и уже сработал, пока приложение было закрыто - приводим
+            // сохраненное состояние в порядок, само срабатывание Alarm уже обработал
+            if (timerSettings.state == TimerState.Running) resetTimerSettings()
+            return
+        }
+
+        _uiState.value = restored
+        if (restored.state == TimerState.Running) {
+            runJob(restored.remainingDurationMs)
+        }
+    }
+
     private fun timerPendingIntent(context: Context): PendingIntent =
         PendingIntent.getBroadcast(
             context,
