@@ -131,7 +131,7 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
                     val newRemainingDurationMs = end - SystemClock.elapsedRealtime()
                     it.copy(remainingDurationMs = newRemainingDurationMs)
                 }
-                delay(200)
+                delay(TICK_INTERVAL_MS.toLong())
             }
         }
     }

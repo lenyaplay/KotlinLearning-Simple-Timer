@@ -203,11 +203,11 @@ fun TimerViewContent(
         topBar = {
             CenterAlignedTopAppBar(title = { Text(text = "Таймер") })
         },
-    ) { innerPadding ->
+    ) {
+        // Центрируем по всему экрану, а не по области под панелью: иначе центр
+        // содержимого смещается вниз на половину высоты панели и это заметно на глаз
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             if (timerUiState.state == TimerState.Idle) {

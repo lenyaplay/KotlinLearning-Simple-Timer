@@ -6,7 +6,7 @@ import android.util.Log
 const val TRACE_TAG = "SimpleTimer"
 
 /** Единственный переключатель трассировки. Работает в любой сборке, включая release */
-const val TRACE_ENABLED = true
+const val TRACE_ENABLED = false
 
 /**
  * Событие подсистемы [subsystem] в лог. Сообщение передается лямбдой: при выключенной

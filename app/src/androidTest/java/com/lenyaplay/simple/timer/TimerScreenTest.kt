@@ -3,6 +3,7 @@ package com.lenyaplay.simple.timer
 import android.view.ViewConfiguration
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.SemanticsMatcher
@@ -15,6 +16,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.TouchInjectionScope
@@ -40,6 +42,7 @@ class TimerScreenTest {
     private var minutes by mutableIntStateOf(0)
     private var seconds by mutableIntStateOf(15)
     private var syncKey by mutableIntStateOf(0)
+    private var running by mutableStateOf(false)
 
     /** Все значения, о которых барабан секунд сообщил наружу, по порядку */
     private val reportedSeconds = mutableListOf<Int>()
@@ -49,6 +52,7 @@ class TimerScreenTest {
         minutes = m
         seconds = s
         syncKey = 0
+        running = false
         reportedSeconds.clear()
         composeRule.setContent {
             TimerForKotlinLearningTheme {
@@ -73,7 +77,15 @@ class TimerScreenTest {
                     onPause = {},
                     onStop = {},
                     onResume = {},
-                    timerUiState = TimerUiState(state = TimerState.Idle),
+                    timerUiState = if (running) {
+                        TimerUiState(
+                            remainingDurationMs = 65_000,
+                            totalDurationMs = 90_000,
+                            state = TimerState.Running,
+                        )
+                    } else {
+                        TimerUiState(state = TimerState.Idle)
+                    },
                 )
             }
         }
@@ -385,6 +397,24 @@ class TimerScreenTest {
         assertWheelShows("Минуты", 5)
         composeRule.onNodeWithText("5 мин")
             .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Selected))
+    }
+
+    /** Кольцо должно стоять ровно по центру экрана, а не по центру области под панелью */
+    @Test
+    fun counterRingIsCenteredOnScreen() {
+        setScreen()
+        composeRule.runOnUiThread { running = true }
+        composeRule.waitForIdle()
+
+        val screen = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
+        val ring = composeRule.onNodeWithTag("ring").fetchSemanticsNode().boundsInRoot
+
+        assertEquals(
+            "Кольцо смещено по вертикали относительно центра экрана",
+            screen.center.y.toDouble(),
+            ring.center.y.toDouble(),
+            2.0,
+        )
     }
 
     /** Цифры счетчика должны помещаться внутрь кольца, а не вылезать за дугу */

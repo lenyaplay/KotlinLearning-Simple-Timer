@@ -59,11 +59,11 @@ fun TimerFinishedScreen(onDismiss: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
+                modifier = Modifier.align(Alignment.Center),
             ) {
                 Text(
                     text = "Таймер завершён",
@@ -75,12 +75,15 @@ fun TimerFinishedScreen(onDismiss: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp)
                 )
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.padding(top = 32.dp)
-                ) {
-                    Text(text = "Ок", fontSize = 20.sp)
-                }
+            }
+
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 32.dp),
+            ) {
+                Text(text = "Ок", fontSize = 20.sp)
             }
         }
     }

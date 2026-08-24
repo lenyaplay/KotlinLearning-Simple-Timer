@@ -1,7 +1,8 @@
 package com.lenyaplay.simple.timer.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -9,7 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lenyaplay.simple.timer.TICK_INTERVAL_MS
 import com.lenyaplay.simple.timer.TimerState
 import com.lenyaplay.simple.timer.TimerUiState
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
@@ -63,12 +65,20 @@ fun TimerCounter(modifier: Modifier = Modifier, state: TimerUiState) {
     } else {
         0f
     }
-    // Тикер обновляет состояние раз в 200 мс, без сглаживания дуга двигалась бы рывками
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = tween(durationMillis = 250),
-        label = "progress",
-    )
+    // Линейная анимация длиной ровно в один тик: новая цель приходит в момент, когда
+    // предыдущая анимация закончилась, поэтому скорость дуги не меняется. Кривая с
+    // замедлением или другая длительность дают серию рывков
+    val animatedProgress = remember { Animatable(progress) }
+    LaunchedEffect(progress, isPaused) {
+        if (isPaused) {
+            animatedProgress.snapTo(progress)
+        } else {
+            animatedProgress.animateTo(
+                targetValue = progress,
+                animationSpec = tween(TICK_INTERVAL_MS, easing = LinearEasing),
+            )
+        }
+    }
 
     val trackColor = MaterialTheme.colorScheme.surfaceVariant
     val arcColor = if (isPaused) {
@@ -123,7 +133,7 @@ fun TimerCounter(modifier: Modifier = Modifier, state: TimerUiState) {
                 drawArc(
                     color = arcColor,
                     startAngle = -90f,
-                    sweepAngle = animatedProgress * 360f,
+                    sweepAngle = animatedProgress.value * 360f,
                     useCenter = false,
                     topLeft = Offset(inset, inset),
                     size = arcSize,
