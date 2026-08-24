@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lenyaplay.simple.timer.trace
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -69,6 +70,7 @@ private fun LabeledWheel(
     onValueChange: (Int) -> Unit,
     label: String,
     contentDescription: String,
+    syncKey: Int,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(LABEL_HEIGHT))
@@ -77,6 +79,7 @@ private fun LabeledWheel(
             count = count,
             onValueChange = onValueChange,
             contentDescription = contentDescription,
+            syncKey = syncKey,
             itemHeight = ITEM_HEIGHT,
             visibleItemCount = VISIBLE_ITEM_COUNT,
             modifier = Modifier.width(64.dp),
@@ -99,6 +102,7 @@ fun TimeInput(
     onHoursChange: (Int) -> Unit,
     onMinutesChange: (Int) -> Unit,
     onSecondsChange: (Int) -> Unit,
+    syncKey: Int = 0,
 ) {
     val backgroundColor = MaterialTheme.colorScheme.background
 
@@ -125,6 +129,7 @@ fun TimeInput(
                 onValueChange = onHoursChange,
                 label = "ч",
                 contentDescription = "Часы",
+                syncKey = syncKey,
             )
             TimeSeparator()
             LabeledWheel(
@@ -133,6 +138,7 @@ fun TimeInput(
                 onValueChange = onMinutesChange,
                 label = "мин",
                 contentDescription = "Минуты",
+                syncKey = syncKey,
             )
             TimeSeparator()
             LabeledWheel(
@@ -141,6 +147,7 @@ fun TimeInput(
                 onValueChange = onSecondsChange,
                 label = "с",
                 contentDescription = "Секунды",
+                syncKey = syncKey,
             )
         }
 
@@ -177,7 +184,10 @@ fun TimePresets(
         PRESETS_IN_MINUTES.forEach { preset ->
             FilterChip(
                 selected = hours == 0 && minutes == preset && seconds == 0,
-                onClick = { onPresetClick(preset) },
+                onClick = {
+                    trace("Пресеты") { "click $preset мин (было $hours:$minutes:$seconds)" }
+                    onPresetClick(preset)
+                },
                 label = { Text(text = "$preset мин") },
             )
         }

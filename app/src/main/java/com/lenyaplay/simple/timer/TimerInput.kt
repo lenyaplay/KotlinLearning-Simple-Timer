@@ -27,10 +27,16 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
     var minutes by mutableIntStateOf(0)
     var seconds by mutableIntStateOf(15)
 
+    // Версия команды "встать на значение". Барабаны доворачиваются по ее смене, а не по
+    // смене самих чисел: числа они меняют и сами, когда их крутят
+    var presetVersion by mutableIntStateOf(0)
+        private set
+
     fun applyPreset(presetMinutes: Int) {
         hours = 0
         minutes = presetMinutes
         seconds = 0
+        presetVersion++
     }
 
     private val _uiState = MutableStateFlow(TimerUiState(remainingDurationMs = 60_000L))

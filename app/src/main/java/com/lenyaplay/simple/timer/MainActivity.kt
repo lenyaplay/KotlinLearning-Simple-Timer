@@ -142,6 +142,7 @@ fun TimerView(
         onMinutesChange = { vm.minutes = it },
         onSecondsChange = { vm.seconds = it },
         onPresetClick = { vm.applyPreset(it) },
+        syncKey = vm.presetVersion,
         onStart = {
             vm.onStartClick()
         },
@@ -190,6 +191,7 @@ fun TimerViewContent(
     onMinutesChange: (Int) -> Unit,
     onSecondsChange: (Int) -> Unit,
     onPresetClick: (Int) -> Unit,
+    syncKey: Int = 0,
     onStart: () -> Unit,
     onPause: () -> Unit,
     onStop: () -> Unit,
@@ -221,6 +223,7 @@ fun TimerViewContent(
                         onHoursChange = onHoursChange,
                         onMinutesChange = onMinutesChange,
                         onSecondsChange = onSecondsChange,
+                        syncKey = syncKey,
                     )
                     TimePresets(
                         hours = hours,
