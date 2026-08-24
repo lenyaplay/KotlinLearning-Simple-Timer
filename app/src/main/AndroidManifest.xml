@@ -20,7 +20,7 @@
         android:theme="@style/Theme.TimerForKotlinLearning"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.TimerForKotlinLearning">
             <intent-filter>
@@ -29,18 +29,18 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".TimerFinishedActivity"
+            android:name=".ui.TimerFinishedActivity"
             android:exported="false"
             android:excludeFromRecents="true"
             android:launchMode="singleTask"
             android:showOnLockScreen="true"
             android:theme="@style/Theme.TimerForKotlinLearning" />
         <receiver
-            android:name=".TimerReceiver"
+            android:name=".receivers.TimerReceiver"
             android:enabled="true"
             android:exported="false" />
         <receiver
-            android:name=".BootReceiver"
+            android:name=".receivers.BootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

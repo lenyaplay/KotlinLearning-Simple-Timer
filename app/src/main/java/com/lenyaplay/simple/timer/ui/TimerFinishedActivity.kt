@@ -1,4 +1,4 @@
-package com.lenyaplay.simple.timer
+package com.lenyaplay.simple.timer.ui
 
 import android.media.AudioAttributes
 import android.media.MediaPlayer
@@ -25,6 +25,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
+import com.lenyaplay.simple.timer.NotificationConstants
+import com.lenyaplay.simple.timer.TimerFinishedText
+import com.lenyaplay.simple.timer.trace
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 
 class TimerFinishedActivity : ComponentActivity() {

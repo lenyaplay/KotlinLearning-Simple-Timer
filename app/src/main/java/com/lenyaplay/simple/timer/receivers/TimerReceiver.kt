@@ -1,4 +1,4 @@
-package com.lenyaplay.simple.timer
+package com.lenyaplay.simple.timer.receivers
 
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -7,6 +7,11 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.lenyaplay.simple.timer.NotificationConstants
+import com.lenyaplay.simple.timer.TimerFinishedText
+import com.lenyaplay.simple.timer.trace
+import com.lenyaplay.simple.timer.notifications.showTimerNotification
+import com.lenyaplay.simple.timer.ui.TimerFinishedActivity
 
 
 class TimerReceiver : BroadcastReceiver() {

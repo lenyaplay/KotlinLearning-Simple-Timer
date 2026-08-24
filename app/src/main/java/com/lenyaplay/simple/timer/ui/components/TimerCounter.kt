@@ -1,6 +1,9 @@
 package com.lenyaplay.simple.timer.ui.components
 
 import android.content.res.Configuration
+import com.lenyaplay.simple.timer.data.TICK_INTERVAL_MS
+import com.lenyaplay.simple.timer.data.TimerState
+import com.lenyaplay.simple.timer.data.TimerUiState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -27,9 +30,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lenyaplay.simple.timer.TICK_INTERVAL_MS
-import com.lenyaplay.simple.timer.TimerState
-import com.lenyaplay.simple.timer.TimerUiState
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 import kotlin.math.ceil
 

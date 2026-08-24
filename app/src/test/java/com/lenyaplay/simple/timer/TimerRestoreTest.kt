@@ -1,5 +1,9 @@
 package com.lenyaplay.simple.timer
 
+import com.lenyaplay.simple.timer.data.TimerState
+import com.lenyaplay.simple.timer.data.TimerUiState
+import com.lenyaplay.simple.timer.data.restoredTimerUiState
+
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

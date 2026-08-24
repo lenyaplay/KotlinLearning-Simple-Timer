@@ -24,6 +24,9 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
+import com.lenyaplay.simple.timer.data.TimerState
+import com.lenyaplay.simple.timer.data.TimerUiState
+import com.lenyaplay.simple.timer.ui.TimerViewContent
 import com.lenyaplay.simple.timer.ui.components.TimerCounter
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 import androidx.compose.ui.semantics.getOrNull

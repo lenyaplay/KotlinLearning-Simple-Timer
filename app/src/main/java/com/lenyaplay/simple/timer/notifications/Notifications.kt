@@ -1,4 +1,4 @@
-package com.lenyaplay.simple.timer
+package com.lenyaplay.simple.timer.notifications
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -10,6 +10,7 @@ import android.os.Build
 import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.lenyaplay.simple.timer.NotificationConstants
 
 // Разрешение запрашивается в MainActivity.requestNotificationPermissionIfNeeded() -
 // вызывающая сторона здесь (TimerReceiver/BootReceiver) не имеет доступа к его результату

@@ -1,4 +1,4 @@
-package com.lenyaplay.simple.timer
+package com.lenyaplay.simple.timer.ui
 
 import android.Manifest
 import android.content.Intent
@@ -33,6 +33,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.lenyaplay.simple.timer.data.TimerState
+import com.lenyaplay.simple.timer.data.TimerUiState
 import com.lenyaplay.simple.timer.ui.components.TimeInput
 import com.lenyaplay.simple.timer.ui.components.TimePresets
 import com.lenyaplay.simple.timer.ui.components.TimerCounter

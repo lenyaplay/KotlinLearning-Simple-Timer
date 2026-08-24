@@ -1,4 +1,4 @@
-package com.lenyaplay.simple.timer;
+package com.lenyaplay.simple.timer.data
 
 import android.content.Context
 import android.content.SharedPreferences

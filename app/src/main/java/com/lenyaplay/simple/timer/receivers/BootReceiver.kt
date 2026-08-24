@@ -1,8 +1,12 @@
-package com.lenyaplay.simple.timer
+package com.lenyaplay.simple.timer.receivers
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.lenyaplay.simple.timer.NotificationConstants
+import com.lenyaplay.simple.timer.data.TimerState
+import com.lenyaplay.simple.timer.data.timerSettings
+import com.lenyaplay.simple.timer.notifications.showTimerNotification
 
 class BootReceiver : BroadcastReceiver() {
 

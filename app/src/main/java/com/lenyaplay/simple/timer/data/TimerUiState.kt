@@ -1,4 +1,4 @@
-package com.lenyaplay.simple.timer
+package com.lenyaplay.simple.timer.data
 
 /**
  * Период обновления счетчика. Дуга прогресса анимируется ровно на это же время: иначе
