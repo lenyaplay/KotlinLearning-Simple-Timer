@@ -113,7 +113,7 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         tickerJob?.cancel()
         tickerJob = viewModelScope.launch {
             while (isActive) {
-                if (remainingDurationMs <= 0) {
+                if (uiState.value.remainingDurationMs <= 0) {
                     _uiState.update {
                         it.copy(
                             remainingDurationMs = 0,
@@ -165,7 +165,6 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         timerSettings.startElapsedMs = 0
     }
 }
-
 
 
 @Composable
