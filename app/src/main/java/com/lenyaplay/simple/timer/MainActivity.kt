@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -137,6 +136,10 @@ fun TimerView(
         hours = vm.hours,
         minutes = vm.minutes,
         seconds = vm.seconds,
+        onHoursChange = { vm.hours = it },
+        onMinutesChange = { vm.minutes = it },
+        onSecondsChange = { vm.seconds = it },
+        onPresetClick = { vm.applyPreset(it) },
         onStart = {
             vm.onStartClick()
         },
@@ -177,9 +180,13 @@ fun OverlayPermissionDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 
 @Composable
 fun TimerViewContent(
-    hours: TextFieldState,
-    minutes: TextFieldState,
-    seconds: TextFieldState,
+    hours: Int,
+    minutes: Int,
+    seconds: Int,
+    onHoursChange: (Int) -> Unit,
+    onMinutesChange: (Int) -> Unit,
+    onSecondsChange: (Int) -> Unit,
+    onPresetClick: (Int) -> Unit,
     onStart: () -> Unit,
     onPause: () -> Unit,
     onStop: () -> Unit,
@@ -203,11 +210,15 @@ fun TimerViewContent(
                         hours = hours,
                         minutes = minutes,
                         seconds = seconds,
+                        onHoursChange = onHoursChange,
+                        onMinutesChange = onMinutesChange,
+                        onSecondsChange = onSecondsChange,
                     )
                     TimePresets(
                         hours = hours,
                         minutes = minutes,
                         seconds = seconds,
+                        onPresetClick = onPresetClick,
                     )
                 }
                 RunTimerButton(
@@ -244,9 +255,13 @@ fun TimerViewContent(
 fun RunningTimerViewContentPreview() {
     TimerForKotlinLearningTheme {
         TimerViewContent(
-            hours = TextFieldState(initialText = "1"),
-            minutes = TextFieldState(initialText = "1"),
-            seconds = TextFieldState(initialText = "12"),
+            hours = 1,
+            minutes = 1,
+            seconds = 12,
+            onHoursChange = {},
+            onMinutesChange = {},
+            onSecondsChange = {},
+            onPresetClick = {},
             onStart = {},
             onStop = {},
             onPause = {},
@@ -265,9 +280,13 @@ fun RunningTimerViewContentPreview() {
 fun IdleTimerViewContentPreview() {
     TimerForKotlinLearningTheme {
         TimerViewContent(
-            hours = TextFieldState(initialText = "1"),
-            minutes = TextFieldState(initialText = "1"),
-            seconds = TextFieldState(initialText = "12"),
+            hours = 1,
+            minutes = 1,
+            seconds = 12,
+            onHoursChange = {},
+            onMinutesChange = {},
+            onSecondsChange = {},
+            onPresetClick = {},
             onStart = {},
             onStop = {},
             onPause = {},

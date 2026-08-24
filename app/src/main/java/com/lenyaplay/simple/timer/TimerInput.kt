@@ -7,7 +7,9 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
-import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.lenyaplay.simple.timer.ui.components.parseDurationMs
@@ -21,9 +23,15 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class TimerInputState(application: Application) : AndroidViewModel(application) {
-    val hours = TextFieldState(initialText = "00")
-    val minutes = TextFieldState(initialText = "00")
-    val seconds = TextFieldState(initialText = "15")
+    var hours by mutableIntStateOf(0)
+    var minutes by mutableIntStateOf(0)
+    var seconds by mutableIntStateOf(15)
+
+    fun applyPreset(presetMinutes: Int) {
+        hours = 0
+        minutes = presetMinutes
+        seconds = 0
+    }
 
     private val _uiState = MutableStateFlow(TimerUiState(remainingDurationMs = 60_000L))
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
