@@ -1,5 +1,6 @@
 package com.lenyaplay.simple.timer
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -10,6 +11,9 @@ import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
+// Разрешение запрашивается в MainActivity.requestNotificationPermissionIfNeeded() -
+// вызывающая сторона здесь (TimerReceiver/BootReceiver) не имеет доступа к его результату
+@SuppressLint("MissingPermission")
 fun showTimerNotification(
     context: Context,
     notificationId: Int,

@@ -121,11 +121,11 @@ fun TimerFinishedScreen(onDismiss: () -> Unit) {
                 modifier = Modifier.align(Alignment.Center),
             ) {
                 Text(
-                    text = "Таймер завершён",
+                    text = TimerFinishedText.TITLE,
                     fontSize = 24.sp,
                 )
                 Text(
-                    text = "Время вышло!",
+                    text = TimerFinishedText.MESSAGE,
                     fontSize = 48.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp)

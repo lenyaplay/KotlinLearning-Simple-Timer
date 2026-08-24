@@ -9,8 +9,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
 
-        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val timerSettings = TimerSettings(sharedPreferences)
+        val timerSettings = context.timerSettings()
 
         // Таймер считается установленным, если он шел или стоял на паузе
         if (timerSettings.state != TimerState.Running &&

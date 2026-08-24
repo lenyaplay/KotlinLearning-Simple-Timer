@@ -44,12 +44,7 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
 
     private var tickerJob: Job? = null
 
-    private val timerSettings by lazy {
-        TimerSettings(
-            getApplication<Application>()
-                .getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        )
-    }
+    private val timerSettings by lazy { getApplication<Application>().timerSettings() }
 
     init {
         restoreState()

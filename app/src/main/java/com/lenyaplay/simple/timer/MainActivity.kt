@@ -182,6 +182,9 @@ fun OverlayPermissionDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+// innerPadding намеренно не применяется - контент центрируется по всему экрану,
+// а не по области под панелью, см. комментарий у Scaffold ниже
+@Suppress("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun TimerViewContent(
     hours: Int,

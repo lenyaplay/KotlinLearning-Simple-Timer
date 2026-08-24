@@ -11,3 +11,8 @@ object NotificationConstants {
     const val TIMER_RESET_ID = 2
     const val FULL_SCREEN_REQUEST_CODE = 201
 }
+
+object TimerFinishedText {
+    const val TITLE = "Таймер завершён"
+    const val MESSAGE = "Время вышло!"
+}

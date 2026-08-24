@@ -1,6 +1,12 @@
 package com.lenyaplay.simple.timer;
 
+import android.content.Context
 import android.content.SharedPreferences
+
+private const val PREFS_NAME = "app_prefs"
+
+internal fun Context.timerSettings(): TimerSettings =
+    TimerSettings(getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE))
 
 internal class TimerSettings(prefs: SharedPreferences) {
     // Время которое прошло с запуска устройства при установке таймера

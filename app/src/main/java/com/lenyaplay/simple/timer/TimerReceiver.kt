@@ -39,8 +39,8 @@ class TimerReceiver : BroadcastReceiver() {
         showTimerNotification(
             context = context,
             notificationId = NotificationConstants.TIMER_FINISHED_ID,
-            title = "Таймер завершён",
-            text = "Время вышло!",
+            title = TimerFinishedText.TITLE,
+            text = TimerFinishedText.MESSAGE,
             channelId = NotificationConstants.ALARM_CHANNEL_ID,
             fullScreenIntent = fullScreenIntent,
         )
