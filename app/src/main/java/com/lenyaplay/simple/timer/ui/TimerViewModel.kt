@@ -1,6 +1,5 @@
 package com.lenyaplay.simple.timer.ui
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.SystemClock
 import androidx.compose.runtime.getValue
@@ -84,7 +83,7 @@ class TimerViewModel(
 
         _uiState.value = restored
         if (restored.state == TimerState.Running) {
-            runJob(restored.remainingDurationMs)
+            startTicker(restored.remainingDurationMs)
         }
     }
 
@@ -96,7 +95,6 @@ class TimerViewModel(
             storage.overlayPermissionDeclined = value
         }
 
-    @SuppressLint("MissingPermission")
     fun onStartClick() {
         val delayInMs = inputValues.durationMs
 
@@ -118,10 +116,10 @@ class TimerViewModel(
                 state = TimerState.Running
             )
         }
-        runJob(remainingDurationMs = delayInMs)
+        startTicker(remainingDurationMs = delayInMs)
     }
 
-    fun runJob(remainingDurationMs: Long) {
+    private fun startTicker(remainingDurationMs: Long) {
         val start = clock()
         val end = start + remainingDurationMs
         tickerJob?.cancel()
@@ -164,7 +162,7 @@ class TimerViewModel(
         val remainingDurationMs = uiState.value.remainingDurationMs
 
         alarms.schedule(remainingDurationMs)
-        runJob(remainingDurationMs)
+        startTicker(remainingDurationMs)
 
         storage.save(
             storage.load().copy(

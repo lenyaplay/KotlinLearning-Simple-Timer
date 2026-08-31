@@ -10,6 +10,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.lenyaplay.simple.timer.NotificationConstants
 import com.lenyaplay.simple.timer.TimerFinishedText
 import com.lenyaplay.simple.timer.trace
+import com.lenyaplay.simple.timer.data.SharedPrefsTimerStorage
 import com.lenyaplay.simple.timer.notifications.showTimerNotification
 import com.lenyaplay.simple.timer.ui.TimerFinishedActivity
 
@@ -17,6 +18,10 @@ import com.lenyaplay.simple.timer.ui.TimerFinishedActivity
 class TimerReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        // Срабатывание Alarm - источник истины о завершении таймера, поэтому хранилище
+        // очищается прямо здесь, а не полагается на то, что открытый экран сам досчитает до нуля
+        SharedPrefsTimerStorage(context).clear()
+
         val activityIntent = Intent(context, TimerFinishedActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }

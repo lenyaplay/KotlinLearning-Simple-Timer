@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
@@ -174,8 +175,9 @@ fun TimerViewContent(
                     onClick = onStart,
                     enabled = parseDurationMs(hours, minutes, seconds) > 0,
                     modifier = Modifier
-                        .padding(bottom = 32.dp)
-                        .align(Alignment.BottomCenter),
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(bottom = 32.dp),
                 )
             } else {
                 TimerCounter(
@@ -185,6 +187,7 @@ fun TimerViewContent(
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
                         .padding(bottom = 32.dp)
                 ) {
                     if (timerUiState.state == TimerState.Paused)

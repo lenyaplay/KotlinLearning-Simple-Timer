@@ -98,6 +98,11 @@ fun WheelPicker(
     // наружу не сообщаются: иначе они затирают только что заданную цель
     var isSyncing by remember { mutableStateOf(false) }
 
+    // Эффекты живут дольше одной композиции (ключи listState/count и syncKey меняются не
+    // при каждой рекомпозиции), поэтому без rememberUpdatedState они звали бы устаревшую
+    // лямбду, замкнутую в момент запуска эффекта
+    val currentOnValueChange by rememberUpdatedState(onValueChange)
+
     // Текущее значение уходит наружу сразу по мере прокрутки, а не после остановки:
     // иначе "Старт" во время докрутки взял бы предыдущее число
     LaunchedEffect(listState, count) {
@@ -107,7 +112,7 @@ fun WheelPicker(
             .distinctUntilChanged()
             .collect { centered ->
                 trace(subsystem) { "report $centered" }
-                if (!isSyncing) onValueChange(centered)
+                if (!isSyncing) currentOnValueChange(centered)
                 // Вибрация - отклик на действие пользователя, при появлении экрана ее быть
                 // не должно
                 if (isFirst) {
@@ -226,7 +231,7 @@ fun WheelPicker(
             )
         } finally {
             isSyncing = false
-            onValueChange(listState.centeredValue(count) ?: target)
+            currentOnValueChange(listState.centeredValue(count) ?: target)
         }
     }
 

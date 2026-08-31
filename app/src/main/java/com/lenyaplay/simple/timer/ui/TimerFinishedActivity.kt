@@ -25,20 +25,34 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.lifecycleScope
 import com.lenyaplay.simple.timer.NotificationConstants
 import com.lenyaplay.simple.timer.TimerFinishedText
 import com.lenyaplay.simple.timer.trace
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+private const val ALARM_SOUND_TIMEOUT_MS = 90_000L
 
 class TimerFinishedActivity : ComponentActivity() {
 
     private var mediaPlayer: MediaPlayer? = null
+    private var alarmSoundTimeoutJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         showOverLockscreen()
         enableEdgeToEdge()
         startAlarmSound()
+
+        // Звук будильника зациклен - без этого он играл бы бесконечно, пока пользователь
+        // сам не закроет экран, и разряжал бы батарею
+        alarmSoundTimeoutJob = lifecycleScope.launch {
+            delay(ALARM_SOUND_TIMEOUT_MS)
+            stopAlarmSound()
+        }
 
         setContent {
             TimerForKotlinLearningTheme {
@@ -82,6 +96,7 @@ class TimerFinishedActivity : ComponentActivity() {
     }
 
     private fun stopAlarmSound() {
+        alarmSoundTimeoutJob?.cancel()
         mediaPlayer?.let {
             try {
                 if (it.isPlaying) it.stop()
