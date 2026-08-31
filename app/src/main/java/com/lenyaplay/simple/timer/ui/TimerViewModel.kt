@@ -1,24 +1,26 @@
 package com.lenyaplay.simple.timer.ui
 
 import android.annotation.SuppressLint
-import android.app.AlarmManager
-import android.app.Application
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.lenyaplay.simple.timer.AlarmConstants
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.lenyaplay.simple.timer.data.AlarmScheduler
+import com.lenyaplay.simple.timer.data.SharedPrefsTimerStorage
+import com.lenyaplay.simple.timer.data.SystemAlarmScheduler
+import com.lenyaplay.simple.timer.data.TimerSnapshot
 import com.lenyaplay.simple.timer.data.TimerState
+import com.lenyaplay.simple.timer.data.TimerStorage
 import com.lenyaplay.simple.timer.data.TimerUiState
 import com.lenyaplay.simple.timer.data.TICK_INTERVAL_MS
 import com.lenyaplay.simple.timer.data.restoredTimerUiState
-import com.lenyaplay.simple.timer.data.timerSettings
-import com.lenyaplay.simple.timer.receivers.TimerReceiver
 import com.lenyaplay.simple.timer.ui.components.parseDurationMs
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -29,10 +31,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-class TimerInputState(application: Application) : AndroidViewModel(application) {
-    var hours by mutableIntStateOf(0)
-    var minutes by mutableIntStateOf(0)
-    var seconds by mutableIntStateOf(15)
+data class TimerInputValues(
+    val hours: Int = 0,
+    val minutes: Int = 0,
+    val seconds: Int = 15,
+) {
+    val durationMs: Long get() = parseDurationMs(hours, minutes, seconds)
+}
+
+class TimerViewModel(
+    private val alarms: AlarmScheduler,
+    private val storage: TimerStorage,
+    private val clock: () -> Long = SystemClock::elapsedRealtime,
+) : ViewModel() {
+    var inputValues by mutableStateOf(TimerInputValues())
 
     // Версия команды "встать на значение". Барабаны доворачиваются по ее смене, а не по
     // смене самих чисел: числа они меняют и сами, когда их крутят
@@ -40,9 +52,7 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         private set
 
     fun applyPreset(presetMinutes: Int) {
-        hours = 0
-        minutes = presetMinutes
-        seconds = 0
+        inputValues = TimerInputValues(hours = 0, minutes = presetMinutes, seconds = 0)
         presetVersion++
     }
 
@@ -51,25 +61,24 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
 
     private var tickerJob: Job? = null
 
-    private val timerSettings by lazy { getApplication<Application>().timerSettings() }
-
     init {
         restoreState()
     }
 
     private fun restoreState() {
+        val snapshot = storage.load()
         val restored = restoredTimerUiState(
-            persistedState = timerSettings.state,
-            remainingDurationMs = timerSettings.remainingDurationMs,
-            totalDurationMs = timerSettings.totalDurationMs,
-            startElapsedMs = timerSettings.startElapsedMs,
-            nowElapsedMs = SystemClock.elapsedRealtime(),
+            persistedState = snapshot.state,
+            remainingDurationMs = snapshot.remainingDurationMs,
+            totalDurationMs = snapshot.totalDurationMs,
+            startElapsedMs = snapshot.startElapsedMs,
+            nowElapsedMs = clock(),
         )
 
         if (restored == null) {
             // Таймер шел и уже сработал, пока приложение было закрыто - приводим
             // сохраненное состояние в порядок, само срабатывание Alarm уже обработал
-            if (timerSettings.state == TimerState.Running) resetTimerSettings()
+            if (snapshot.state == TimerState.Running) storage.clear()
             return
         }
 
@@ -79,56 +88,29 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun timerPendingIntent(context: Context): PendingIntent =
-        PendingIntent.getBroadcast(
-            context,
-            AlarmConstants.TIMER_REQUEST_CODE,
-            Intent(context, TimerReceiver::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-    private fun setAlarm(context: Context, remainingDurationMs: Long) {
-        val pendingIntent = timerPendingIntent(context)
-        val triggerAtMillis = SystemClock.elapsedRealtime() + remainingDurationMs
-
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent
-        )
-    }
-
-    private fun cancelAlarm(context: Context) {
-        val pendingIntent = timerPendingIntent(context)
-
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.cancel(pendingIntent)
-        pendingIntent.cancel()
-    }
-
     var overlayAsked: Boolean = false
 
     var overlayPermissionDeclined: Boolean
-        get() = timerSettings.overlayPermissionDeclined
+        get() = storage.overlayPermissionDeclined
         set(value) {
-            timerSettings.overlayPermissionDeclined = value
+            storage.overlayPermissionDeclined = value
         }
 
     @SuppressLint("MissingPermission")
     fun onStartClick() {
-        // Парсинг данных
-        val delayInMs = parseDurationMs(hours, minutes, seconds)
+        val delayInMs = inputValues.durationMs
 
-        val context = getApplication<Application>()
+        storage.save(
+            TimerSnapshot(
+                startElapsedMs = clock(),
+                totalDurationMs = delayInMs,
+                remainingDurationMs = delayInMs,
+                state = TimerState.Running,
+            )
+        )
 
-        // Сохранение в Shared Preferences
-        timerSettings.startElapsedMs = SystemClock.elapsedRealtime()
-        timerSettings.remainingDurationMs = delayInMs
-        timerSettings.totalDurationMs = delayInMs
-        timerSettings.state = TimerState.Running
+        alarms.schedule(delayInMs)
 
-        setAlarm(context, delayInMs)
-
-        // Работа со счетчиком
         _uiState.update {
             it.copy(
                 remainingDurationMs = delayInMs,
@@ -140,7 +122,7 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
     }
 
     fun runJob(remainingDurationMs: Long) {
-        val start = SystemClock.elapsedRealtime()
+        val start = clock()
         val end = start + remainingDurationMs
         tickerJob?.cancel()
         tickerJob = viewModelScope.launch {
@@ -152,11 +134,11 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
                             state = TimerState.Idle
                         )
                     }
-                    resetTimerSettings()
+                    storage.clear()
                     break
                 }
                 _uiState.update {
-                    val newRemainingDurationMs = end - SystemClock.elapsedRealtime()
+                    val newRemainingDurationMs = end - clock()
                     it.copy(remainingDurationMs = newRemainingDurationMs)
                 }
                 delay(TICK_INTERVAL_MS.toLong())
@@ -168,21 +150,29 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         tickerJob?.cancel()
         _uiState.update { it.copy(state = TimerState.Paused) }
 
-        cancelAlarm(getApplication())
+        alarms.cancel()
 
-        timerSettings.state = TimerState.Paused
-        timerSettings.remainingDurationMs = uiState.value.remainingDurationMs
+        storage.save(
+            storage.load().copy(
+                state = TimerState.Paused,
+                remainingDurationMs = uiState.value.remainingDurationMs,
+            )
+        )
     }
 
     fun onResumeClick() {
         val remainingDurationMs = uiState.value.remainingDurationMs
 
-        setAlarm(getApplication(), remainingDurationMs)
+        alarms.schedule(remainingDurationMs)
         runJob(remainingDurationMs)
 
-        timerSettings.startElapsedMs = SystemClock.elapsedRealtime()
-        timerSettings.remainingDurationMs = remainingDurationMs
-        timerSettings.state = TimerState.Running
+        storage.save(
+            storage.load().copy(
+                startElapsedMs = clock(),
+                remainingDurationMs = remainingDurationMs,
+                state = TimerState.Running,
+            )
+        )
         _uiState.update { it.copy(state = TimerState.Running) }
     }
 
@@ -190,15 +180,19 @@ class TimerInputState(application: Application) : AndroidViewModel(application) 
         tickerJob?.cancel()
         _uiState.update { it.copy(state = TimerState.Idle) }
 
-        cancelAlarm(getApplication())
-
-        resetTimerSettings()
+        alarms.cancel()
+        storage.clear()
     }
+}
 
-    private fun resetTimerSettings() {
-        timerSettings.state = TimerState.Idle
-        timerSettings.remainingDurationMs = 0
-        timerSettings.totalDurationMs = 0
-        timerSettings.startElapsedMs = 0
+fun timerViewModelFactory(context: Context): ViewModelProvider.Factory {
+    val appContext = context.applicationContext
+    return viewModelFactory {
+        initializer {
+            TimerViewModel(
+                alarms = SystemAlarmScheduler(appContext),
+                storage = SharedPrefsTimerStorage(appContext),
+            )
+        }
     }
 }
