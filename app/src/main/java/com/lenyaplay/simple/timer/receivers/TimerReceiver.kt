@@ -12,7 +12,7 @@ import com.lenyaplay.simple.timer.TimerFinishedText
 import com.lenyaplay.simple.timer.trace
 import com.lenyaplay.simple.timer.data.SharedPrefsTimerStorage
 import com.lenyaplay.simple.timer.notifications.showTimerNotification
-import com.lenyaplay.simple.timer.ui.TimerFinishedActivity
+import com.lenyaplay.simple.timer.ui.timerFinishedActivityIntent
 
 
 class TimerReceiver : BroadcastReceiver() {
@@ -22,9 +22,7 @@ class TimerReceiver : BroadcastReceiver() {
         // очищается прямо здесь, а не полагается на то, что открытый экран сам досчитает до нуля
         SharedPrefsTimerStorage(context).clear()
 
-        val activityIntent = Intent(context, TimerFinishedActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        val activityIntent = timerFinishedActivityIntent(context)
 
         val isAppInForeground = ProcessLifecycleOwner.get().lifecycle.currentState
             .isAtLeast(Lifecycle.State.STARTED)

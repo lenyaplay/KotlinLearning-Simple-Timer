@@ -1,5 +1,7 @@
 package com.lenyaplay.simple.timer.ui
 
+import android.content.Context
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Build
@@ -35,6 +37,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val ALARM_SOUND_TIMEOUT_MS = 90_000L
+
+fun timerFinishedActivityIntent(context: Context): Intent =
+    Intent(context, TimerFinishedActivity::class.java).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
 
 class TimerFinishedActivity : ComponentActivity() {
 

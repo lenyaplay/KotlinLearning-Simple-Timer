@@ -23,8 +23,11 @@ import com.lenyaplay.simple.timer.data.restoredTimerUiState
 import com.lenyaplay.simple.timer.ui.components.parseDurationMs
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -57,6 +60,11 @@ class TimerViewModel(
 
     private val _uiState = MutableStateFlow(TimerUiState(remainingDurationMs = 60_000L))
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
+
+    // Тикер сам досчитал до нуля - вне зависимости от того, показал ли кто-то экран
+    // завершения по этому событию
+    private val _timerFinishedEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val timerFinishedEvents: SharedFlow<Unit> = _timerFinishedEvents.asSharedFlow()
 
     private var tickerJob: Job? = null
 
@@ -133,6 +141,7 @@ class TimerViewModel(
                         )
                     }
                     storage.clear()
+                    _timerFinishedEvents.tryEmit(Unit)
                     break
                 }
                 _uiState.update {
@@ -180,6 +189,12 @@ class TimerViewModel(
 
         alarms.cancel()
         storage.clear()
+    }
+
+    fun onTimerFinishedScreenShown() {
+        // Экран уже показан сами, ждать Alarm (с его MIN_FUTURITY системы ~5 сек) больше не
+        // нужно - иначе он откроет тот же экран повторно
+        alarms.cancel()
     }
 }
 

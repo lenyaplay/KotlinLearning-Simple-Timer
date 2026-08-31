@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -26,8 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lenyaplay.simple.timer.data.TimerState
 import com.lenyaplay.simple.timer.data.TimerUiState
@@ -49,6 +53,20 @@ fun TimerView(
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showOverlayDialog by rememberSaveable { mutableStateOf(false) }
+
+    // Показываем экран завершения сами, не дожидаясь Alarm - у него минимальная задержка
+    // доставки ~5 сек (MIN_FUTURITY системы), а тикер точен. Подписка активна только пока
+    // экран реально на переднем плане: иначе можно запустить Activity из фона и потерять
+    // подстраховку через Alarm, отменив его раньше, чем экран правда показался
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(vm, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            vm.timerFinishedEvents.collect {
+                context.startActivity(timerFinishedActivityIntent(context))
+                vm.onTimerFinishedScreenShown()
+            }
+        }
+    }
 
     LifecycleResumeEffect(notificationStepDone) {
         if (notificationStepDone &&

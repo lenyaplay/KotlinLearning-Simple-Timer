@@ -27,6 +27,15 @@ AlarmManager не хранит данные на диске, поэтому по
 с Alarm'ом в BroadcastRecevier, сразу показываем Activity через
 `NotificationCompat.Builder().setFullScreenIntent.`
 
+#### Минимальный промежуток на который можно поставить Alarm.
+
+В AOSP и соответственно на других прошивках есть параметр "MIN_FUTURITY_MILLIS". Он равен по
+умолчанию 5 секундам, следовательно если установить таймер на 4 секунды, то вызов произойдет всё
+равно через 5 секунд.
+
+Поэтому когда приложение открыто - isForeground, мы ориентируемся на внутренний счетчик при показе
+экрана.
+
 ### Перезапуск
 
 После перезапуска нельзя выяснить сколько времени прошло, если пользователь допустим поменял время
@@ -35,3 +44,29 @@ AlarmManager не хранит данные на диске, поэтому по
 время которое прошло после установки Alarm'а.
 
 Принято простое решение - просто показываем уведомление что все таймеры были сброшены и всё.
+
+### Отладка
+
+С помощью команды `adb shell dumpsys alarm` можно получить состояние системной службы AlarmManager.
+
+Команда `adb shell dumpsys alarm > alarm_dump.txt` сразу запишет дамп в файл. Который будет
+выглядить примерно так:
+
+```text
+Current Alarm Manager state:
+  Settings:
+    version=13 
+    min_futurity=+5s0ms
+    min_interval=+1m0s0ms
+    max_interval=+365d0h0m0s0ms
+    min_window=+10m0s0ms
+  ...
+  ...
+  ...
+  143 pending alarms: 
+    ELAPSED_WAKEUP #1: Alarm{1078f77 type 2 origWhen 276678409 whenElapsed 276711095 com.google.android.gms}
+      tag=*walarm*:cloud_node_sync
+      type=ELAPSED_WAKEUP origWhen=-33s367ms window=+3m35s505ms repeatInterval=0 count=0 flags=0x0
+      policyWhenElapsed: requester=-33s367ms app_standby=-681ms device_idle=-18s230ms battery_saver=-5m20s708ms ssru=-5m20s708ms power_pending=--
+      whenElapsed=-681ms maxWhenElapsed=+3m2s138ms..
+```
