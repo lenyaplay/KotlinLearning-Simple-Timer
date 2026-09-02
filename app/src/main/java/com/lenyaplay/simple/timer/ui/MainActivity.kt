@@ -1,6 +1,7 @@
 package com.lenyaplay.simple.timer.ui
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
@@ -14,17 +15,25 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import com.lenyaplay.simple.timer.R
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 
 class MainActivity : ComponentActivity() {
     private val notificationStepDone = mutableStateOf(false)
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(newBase.withAppLocale())
+    }
+
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (!isGranted) {
-            Toast.makeText(this, "Без разрешения уведомление не покажется", Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(
+                this,
+                getString(R.string.notification_permission_denied_toast),
+                Toast.LENGTH_SHORT
+            ).show()
         }
         notificationStepDone.value = true
     }

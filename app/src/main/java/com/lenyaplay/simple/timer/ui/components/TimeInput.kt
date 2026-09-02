@@ -27,11 +27,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lenyaplay.simple.timer.R
 import com.lenyaplay.simple.timer.trace
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 import kotlin.time.Duration.Companion.hours
@@ -127,8 +129,8 @@ fun TimeInput(
                 value = hours,
                 count = 24,
                 onValueChange = onHoursChange,
-                label = "ч",
-                contentDescription = "Часы",
+                label = stringResource(R.string.hours_label),
+                contentDescription = stringResource(R.string.hours_content_description),
                 syncKey = syncKey,
             )
             TimeSeparator()
@@ -136,8 +138,8 @@ fun TimeInput(
                 value = minutes,
                 count = 60,
                 onValueChange = onMinutesChange,
-                label = "мин",
-                contentDescription = "Минуты",
+                label = stringResource(R.string.minutes_label),
+                contentDescription = stringResource(R.string.minutes_content_description),
                 syncKey = syncKey,
             )
             TimeSeparator()
@@ -145,8 +147,8 @@ fun TimeInput(
                 value = seconds,
                 count = 60,
                 onValueChange = onSecondsChange,
-                label = "с",
-                contentDescription = "Секунды",
+                label = stringResource(R.string.seconds_label),
+                contentDescription = stringResource(R.string.seconds_content_description),
                 syncKey = syncKey,
             )
         }
@@ -186,7 +188,7 @@ fun TimePresets(
                     trace("Пресеты") { "click $preset мин" }
                     onPresetClick(preset)
                 },
-                label = { Text(text = "$preset мин") },
+                label = { Text(text = stringResource(R.string.preset_minutes, preset)) },
             )
         }
     }

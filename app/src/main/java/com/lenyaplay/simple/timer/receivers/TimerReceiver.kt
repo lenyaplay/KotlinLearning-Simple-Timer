@@ -8,7 +8,7 @@ import android.provider.Settings
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.lenyaplay.simple.timer.NotificationConstants
-import com.lenyaplay.simple.timer.TimerFinishedText
+import com.lenyaplay.simple.timer.R
 import com.lenyaplay.simple.timer.trace
 import com.lenyaplay.simple.timer.data.SharedPrefsTimerStorage
 import com.lenyaplay.simple.timer.notifications.showTimerNotification
@@ -47,8 +47,8 @@ class TimerReceiver : BroadcastReceiver() {
         showTimerNotification(
             context = context,
             notificationId = NotificationConstants.TIMER_FINISHED_ID,
-            title = TimerFinishedText.TITLE,
-            text = TimerFinishedText.MESSAGE,
+            title = context.getString(R.string.timer_finished_title),
+            text = context.getString(R.string.timer_finished_message),
             channelId = NotificationConstants.ALARM_CHANNEL_ID,
             fullScreenIntent = fullScreenIntent,
         )

@@ -1,5 +1,6 @@
 package com.lenyaplay.simple.timer.ui
 
+import android.content.Context
 import android.provider.Settings
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +14,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,6 +29,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -33,6 +40,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.lenyaplay.simple.timer.R
+import com.lenyaplay.simple.timer.trace
 import com.lenyaplay.simple.timer.data.TimerState
 import com.lenyaplay.simple.timer.data.TimerUiState
 import com.lenyaplay.simple.timer.ui.components.PauseTimerButton
@@ -123,21 +132,32 @@ fun TimerView(
 fun OverlayPermissionDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "Показывать таймер поверх приложений") },
-        text = {
-            Text(
-                text = "Без этого разрешения, когда время выйдет и вы будете пользоваться " +
-                        "телефоном, придёт только обычное уведомление. " +
-                        "С ним таймер развернётся на весь экран."
-            )
-        },
+        title = { Text(text = stringResource(R.string.overlay_permission_dialog_title)) },
+        text = { Text(text = stringResource(R.string.overlay_permission_dialog_body)) },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text(text = "Открыть настройки") }
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(R.string.overlay_permission_confirm_button))
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(text = "Не надо") }
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.overlay_permission_dismiss_button))
+            }
         },
     )
+}
+
+private fun currentAppLanguage(context: Context): String =
+    if (context.storedLanguage() == "ru") "ru" else "en"
+
+private fun toggleAppLanguage(context: Context) {
+    val next = if (currentAppLanguage(context) == "ru") "en" else "ru"
+    trace("Язык") { "переключение ${currentAppLanguage(context)} -> $next" }
+    context.setStoredLanguage(next)
+    trace("Язык") { "после setStoredLanguage: ${context.storedLanguage()}" }
+    val activity = context.findActivity()
+    trace("Язык") { "activity для recreate: $activity" }
+    activity?.recreate()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -160,10 +180,38 @@ fun TimerViewContent(
     onResume: () -> Unit,
     timerUiState: TimerUiState,
 ) {
+    val context = LocalContext.current
+    val languageSwitchDescription = stringResource(R.string.language_switch_content_description)
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            CenterAlignedTopAppBar(title = { Text(text = "Таймер") })
+            CenterAlignedTopAppBar(
+                title = { Text(text = stringResource(R.string.top_bar_title)) },
+                actions = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(end = 8.dp),
+                    ) {
+                        Text(text = stringResource(R.string.language_code_en))
+                        Switch(
+                            checked = currentAppLanguage(context) == "ru",
+                            onCheckedChange = { toggleAppLanguage(context) },
+                            colors = SwitchDefaults.colors(
+                                uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.primary,
+                                uncheckedBorderColor = MaterialTheme.colorScheme.primary,
+                                uncheckedIconColor = MaterialTheme.colorScheme.primary,
+                            ),
+                            modifier = Modifier.semantics {
+                                contentDescription = languageSwitchDescription
+                            },
+                        )
+                        Text(text = stringResource(R.string.language_code_ru))
+                    }
+                },
+            )
         },
     ) {
         // Центрируем по всему экрану, а не по области под панелью: иначе центр

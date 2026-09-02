@@ -11,6 +11,7 @@ import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.lenyaplay.simple.timer.NotificationConstants
+import com.lenyaplay.simple.timer.R
 
 // Разрешение запрашивается в MainActivity.requestNotificationPermissionIfNeeded() -
 // вызывающая сторона здесь (TimerReceiver/BootReceiver) не имеет доступа к его результату
@@ -50,8 +51,11 @@ private fun ensureChannel(context: Context, channelId: String) {
     if (manager.getNotificationChannel(channelId) != null) return
 
     val channel = if (channelId == NotificationConstants.ALARM_CHANNEL_ID) {
-        NotificationChannel(channelId, "Сигнал таймера", NotificationManager.IMPORTANCE_HIGH)
-            .apply {
+        NotificationChannel(
+            channelId,
+            context.getString(R.string.notification_channel_alarm_name),
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
                 val attributes = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -59,7 +63,11 @@ private fun ensureChannel(context: Context, channelId: String) {
                 setSound(Settings.System.DEFAULT_ALARM_ALERT_URI, attributes)
             }
     } else {
-        NotificationChannel(channelId, "Таймер", NotificationManager.IMPORTANCE_HIGH)
+        NotificationChannel(
+            channelId,
+            context.getString(R.string.notification_channel_default_name),
+            NotificationManager.IMPORTANCE_HIGH
+        )
     }
     manager.createNotificationChannel(channel)
 }
