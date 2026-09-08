@@ -1,38 +1,27 @@
 package com.lenyaplay.simple.timer.ui
 
-import android.content.Context
-import android.content.ContextWrapper
-import androidx.activity.ComponentActivity
-import androidx.core.content.edit
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.lenyaplay.simple.timer.trace
-import java.util.Locale
 
-private const val PREFS_NAME = "locale_prefs"
-private const val LANGUAGE_KEY = "language"
+enum class AppLanguage(val tag: String) {
+    English("en"),
+    Russian("ru");
 
-fun Context.storedLanguage(): String? =
-    getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getString(LANGUAGE_KEY, null)
-
-fun Context.setStoredLanguage(language: String) {
-    getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit {
-        putString(LANGUAGE_KEY, language)
+    companion object {
+        fun fromTag(tag: String?): AppLanguage =
+            entries.find { it.tag == tag } ?: English
     }
 }
 
-fun Context.withAppLocale(): Context {
-    val language = storedLanguage()
-    trace("Язык") { "attachBaseContext, сохранённый язык: $language" }
-    if (language == null) return this
-    val configuration = resources.configuration
-    configuration.setLocale(Locale(language))
-    return createConfigurationContext(configuration)
+fun currentAppLanguage(): AppLanguage {
+    val locales = AppCompatDelegate.getApplicationLocales()
+    val language = if (locales.isEmpty) null else locales[0]?.language
+    trace("Язык") { "текущий язык приложения: $language" }
+    return AppLanguage.fromTag(language)
 }
 
-fun Context.findActivity(): ComponentActivity? {
-    var context = this
-    while (context is ContextWrapper) {
-        if (context is ComponentActivity) return context
-        context = context.baseContext
-    }
-    return null
+fun setAppLanguage(language: AppLanguage) {
+    trace("Язык") { "переключение языка на: ${language.tag}" }
+    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language.tag))
 }

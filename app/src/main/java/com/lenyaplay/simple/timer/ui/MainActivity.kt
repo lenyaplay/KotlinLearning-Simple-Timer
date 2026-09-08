@@ -1,29 +1,24 @@
 package com.lenyaplay.simple.timer.ui
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.lenyaplay.simple.timer.R
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private val notificationStepDone = mutableStateOf(false)
-
-    override fun attachBaseContext(newBase: Context) {
-        super.attachBaseContext(newBase.withAppLocale())
-    }
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()

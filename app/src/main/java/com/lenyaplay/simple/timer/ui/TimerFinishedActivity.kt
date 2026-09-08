@@ -8,9 +8,9 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.WindowManager
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
@@ -44,14 +44,10 @@ fun timerFinishedActivityIntent(context: Context): Intent =
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
-class TimerFinishedActivity : ComponentActivity() {
+class TimerFinishedActivity : AppCompatActivity() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var alarmSoundTimeoutJob: Job? = null
-
-    override fun attachBaseContext(newBase: Context) {
-        super.attachBaseContext(newBase.withAppLocale())
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

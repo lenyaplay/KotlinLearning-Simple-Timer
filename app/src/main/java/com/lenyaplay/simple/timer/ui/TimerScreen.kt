@@ -1,6 +1,5 @@
 package com.lenyaplay.simple.timer.ui
 
-import android.content.Context
 import android.provider.Settings
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -147,19 +147,6 @@ fun OverlayPermissionDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
-private fun currentAppLanguage(context: Context): String =
-    if (context.storedLanguage() == "ru") "ru" else "en"
-
-private fun toggleAppLanguage(context: Context) {
-    val next = if (currentAppLanguage(context) == "ru") "en" else "ru"
-    trace("Язык") { "переключение ${currentAppLanguage(context)} -> $next" }
-    context.setStoredLanguage(next)
-    trace("Язык") { "после setStoredLanguage: ${context.storedLanguage()}" }
-    val activity = context.findActivity()
-    trace("Язык") { "activity для recreate: $activity" }
-    activity?.recreate()
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 // innerPadding намеренно не применяется - контент центрируется по всему экрану,
 // а не по области под панелью, см. комментарий у Scaffold ниже
@@ -182,6 +169,7 @@ fun TimerViewContent(
 ) {
     val context = LocalContext.current
     val languageSwitchDescription = stringResource(R.string.language_switch_content_description)
+    var language by remember { mutableStateOf(currentAppLanguage()) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -196,8 +184,12 @@ fun TimerViewContent(
                     ) {
                         Text(text = stringResource(R.string.language_code_en))
                         Switch(
-                            checked = currentAppLanguage(context) == "ru",
-                            onCheckedChange = { toggleAppLanguage(context) },
+                            checked = language == AppLanguage.Russian,
+                            onCheckedChange = { checked ->
+                                val next = if (checked) AppLanguage.Russian else AppLanguage.English
+                                language = next
+                                setAppLanguage(next)
+                            },
                             colors = SwitchDefaults.colors(
                                 uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary,
                                 uncheckedTrackColor = MaterialTheme.colorScheme.primary,
