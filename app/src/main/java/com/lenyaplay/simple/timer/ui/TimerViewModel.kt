@@ -133,7 +133,8 @@ class TimerViewModel(
         tickerJob?.cancel()
         tickerJob = viewModelScope.launch {
             while (isActive) {
-                if (uiState.value.remainingDurationMs <= 0) {
+                val newRemainingDurationMs = end - clock()
+                if (newRemainingDurationMs <= 0) {
                     _uiState.update {
                         it.copy(
                             remainingDurationMs = 0,
@@ -144,11 +145,8 @@ class TimerViewModel(
                     _timerFinishedEvents.tryEmit(Unit)
                     break
                 }
-                _uiState.update {
-                    val newRemainingDurationMs = end - clock()
-                    it.copy(remainingDurationMs = newRemainingDurationMs)
-                }
-                delay(TICK_INTERVAL_MS.toLong())
+                _uiState.update { it.copy(remainingDurationMs = newRemainingDurationMs) }
+                delay(TICK_INTERVAL_MS.toLong().milliseconds)
             }
         }
     }
