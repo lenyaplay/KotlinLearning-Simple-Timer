@@ -3,7 +3,6 @@ package com.lenyaplay.simple.timer.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import java.util.Timer
 
 private const val PREFS_NAME = "app_prefs"
 

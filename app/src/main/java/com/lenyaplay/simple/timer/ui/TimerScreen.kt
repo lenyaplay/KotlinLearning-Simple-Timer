@@ -41,7 +41,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lenyaplay.simple.timer.R
-import com.lenyaplay.simple.timer.trace
 import com.lenyaplay.simple.timer.data.TimerState
 import com.lenyaplay.simple.timer.data.TimerUiState
 import com.lenyaplay.simple.timer.ui.components.PauseTimerButton
