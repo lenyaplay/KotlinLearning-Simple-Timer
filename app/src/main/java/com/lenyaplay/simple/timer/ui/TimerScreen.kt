@@ -61,6 +61,7 @@ fun TimerView(
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showOverlayDialog by rememberSaveable { mutableStateOf(false) }
+    var language by remember { mutableStateOf(currentAppLanguage(context)) }
 
     // Показываем экран завершения сами, не дожидаясь Alarm - у него минимальная задержка
     // доставки ~5 сек (MIN_FUTURITY системы), а тикер точен. Подписка активна только пока
@@ -123,6 +124,11 @@ fun TimerView(
             vm.onResumeClick()
         },
         timerUiState = uiState,
+        language = language,
+        onLanguageChange = {
+            language = it
+            setAppLanguage(it)
+        },
     )
 }
 
@@ -165,10 +171,10 @@ fun TimerViewContent(
     onStop: () -> Unit,
     onResume: () -> Unit,
     timerUiState: TimerUiState,
+    language: AppLanguage,
+    onLanguageChange: (AppLanguage) -> Unit,
 ) {
-    val context = LocalContext.current
     val languageSwitchDescription = stringResource(R.string.language_switch_content_description)
-    var language by remember { mutableStateOf(currentAppLanguage()) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -185,9 +191,9 @@ fun TimerViewContent(
                         Switch(
                             checked = language == AppLanguage.Russian,
                             onCheckedChange = { checked ->
-                                val next = if (checked) AppLanguage.Russian else AppLanguage.English
-                                language = next
-                                setAppLanguage(next)
+                                onLanguageChange(
+                                    if (checked) AppLanguage.Russian else AppLanguage.English
+                                )
                             },
                             colors = SwitchDefaults.colors(
                                 uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary,
@@ -279,7 +285,9 @@ fun RunningTimerViewContentPreview() {
                 remainingDurationMs = 65000,
                 totalDurationMs = 65000,
                 state = TimerState.Running
-            )
+            ),
+            language = AppLanguage.English,
+            onLanguageChange = {},
         )
     }
 }
@@ -304,7 +312,9 @@ fun IdleTimerViewContentPreview() {
                 remainingDurationMs = 65000,
                 totalDurationMs = 65000,
                 state = TimerState.Idle
-            )
+            ),
+            language = AppLanguage.English,
+            onLanguageChange = {},
         )
     }
 }

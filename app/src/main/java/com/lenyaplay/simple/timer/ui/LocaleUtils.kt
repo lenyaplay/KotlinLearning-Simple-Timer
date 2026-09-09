@@ -1,6 +1,8 @@
 package com.lenyaplay.simple.timer.ui
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.ConfigurationCompat
 import androidx.core.os.LocaleListCompat
 import com.lenyaplay.simple.timer.trace
 
@@ -14,14 +16,18 @@ enum class AppLanguage(val tag: String) {
     }
 }
 
-fun currentAppLanguage(): AppLanguage {
+fun currentAppLanguage(context: Context): AppLanguage {
     val locales = AppCompatDelegate.getApplicationLocales()
-    val language = if (locales.isEmpty) null else locales[0]?.language
-    trace("Язык") { "текущий язык приложения: $language" }
+    val language = if (locales.isEmpty) {
+        ConfigurationCompat.getLocales(context.resources.configuration)[0]?.language
+    } else {
+        locales[0]?.language
+    }
+    trace("Language") { "current app language: $language" }
     return AppLanguage.fromTag(language)
 }
 
 fun setAppLanguage(language: AppLanguage) {
-    trace("Язык") { "переключение языка на: ${language.tag}" }
+    trace("Language") { "switching language to: ${language.tag}" }
     AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language.tag))
 }

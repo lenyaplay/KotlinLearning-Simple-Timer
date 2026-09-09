@@ -64,7 +64,7 @@ and read what actually happened — this is how the value oscillation and the se
   tracing off the compiler removes the calls entirely — including in release builds.
 - Read: `adb logcat -s SimpleTimer:I`. Record a session:
   `adb logcat -c && adb logcat -s SimpleTimer:I > trace.log`.
-- Messages go through a lambda (`trace("Барабан") { "..." }`) so nothing is built when tracing is off.
+- Messages go through a lambda (`trace("WheelPicker") { "..." }`) so nothing is built when tracing is off.
 - **Log the silent branches too** — early returns and skips. "I tapped the preset and nothing
   happened" only became visible once the skip reasons were logged.
 - Mark anomalies in the log itself (`WARN pull-back`, `WARN misaligned`) so they can be grepped

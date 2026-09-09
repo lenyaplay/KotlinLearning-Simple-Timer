@@ -99,7 +99,7 @@ class TimerFinishedActivity : AppCompatActivity() {
         } catch (e: Exception) {
             // Нет доступного звука будильника (например на эмуляторе) - экран и так
             // выполняет свою роль, падать из-за отсутствия звука не нужно
-            trace("ТаймерЗавершён") { "не удалось запустить звук: ${e.message}" }
+            trace("TimerFinished") { "failed to start sound: ${e.message}" }
         }
     }
 

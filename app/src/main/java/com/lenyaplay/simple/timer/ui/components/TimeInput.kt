@@ -72,6 +72,7 @@ private fun LabeledWheel(
     onValueChange: (Int) -> Unit,
     label: String,
     contentDescription: String,
+    traceTag: String,
     syncKey: Int,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -81,6 +82,7 @@ private fun LabeledWheel(
             count = count,
             onValueChange = onValueChange,
             contentDescription = contentDescription,
+            traceTag = traceTag,
             syncKey = syncKey,
             itemHeight = ITEM_HEIGHT,
             visibleItemCount = VISIBLE_ITEM_COUNT,
@@ -131,6 +133,7 @@ fun TimeInput(
                 onValueChange = onHoursChange,
                 label = stringResource(R.string.hours_label),
                 contentDescription = stringResource(R.string.hours_content_description),
+                traceTag = "WheelPicker-hours",
                 syncKey = syncKey,
             )
             TimeSeparator()
@@ -140,6 +143,7 @@ fun TimeInput(
                 onValueChange = onMinutesChange,
                 label = stringResource(R.string.minutes_label),
                 contentDescription = stringResource(R.string.minutes_content_description),
+                traceTag = "WheelPicker-minutes",
                 syncKey = syncKey,
             )
             TimeSeparator()
@@ -149,6 +153,7 @@ fun TimeInput(
                 onValueChange = onSecondsChange,
                 label = stringResource(R.string.seconds_label),
                 contentDescription = stringResource(R.string.seconds_content_description),
+                traceTag = "WheelPicker-seconds",
                 syncKey = syncKey,
             )
         }
@@ -185,7 +190,7 @@ fun TimePresets(
             // Подсветка выбранного мигала бы, когда барабан проезжает через эти значения
             AssistChip(
                 onClick = {
-                    trace("Пресеты") { "click $preset мин" }
+                    trace("Presets") { "click $preset min" }
                     onPresetClick(preset)
                 },
                 label = { Text(text = stringResource(R.string.preset_minutes, preset)) },

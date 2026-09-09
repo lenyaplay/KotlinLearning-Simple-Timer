@@ -80,6 +80,7 @@ fun WheelPicker(
     modifier: Modifier = Modifier,
     syncKey: Int = 0,
     contentDescription: String? = null,
+    traceTag: String = "WheelPicker",
     visibleItemCount: Int = 5,
     itemHeight: Dp = 48.dp,
 ) {
@@ -92,7 +93,6 @@ fun WheelPicker(
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = startIndex)
     val itemHeightPx = with(LocalDensity.current) { itemHeight.toPx() }
     val view = LocalView.current
-    val subsystem = contentDescription ?: "Барабан"
 
     // Пока барабан сам доворачивает до заданного снаружи значения, промежуточные числа
     // наружу не сообщаются: иначе они затирают только что заданную цель
@@ -111,7 +111,7 @@ fun WheelPicker(
             .filterNotNull()
             .distinctUntilChanged()
             .collect { centered ->
-                trace(subsystem) { "report $centered" }
+                trace(traceTag) { "report $centered" }
                 if (!isSyncing) currentOnValueChange(centered)
                 // Вибрация - отклик на действие пользователя, при появлении экрана ее быть
                 // не должно
@@ -133,7 +133,7 @@ fun WheelPicker(
             .collect { inProgress ->
                 if (inProgress) {
                     anchor = listState.scrollAnchor()
-                    trace(subsystem) {
+                    trace(traceTag) {
                         "scroll start value=${listState.centeredValue(count)} " +
                                 "fraction=${listState.centerFraction(itemHeightPx)}"
                     }
@@ -153,13 +153,13 @@ fun WheelPicker(
                     val distance = (step - fraction) * itemHeightPx
 
                     if (attempt == 0) {
-                        trace(subsystem) {
+                        trace(traceTag) {
                             "scroll end value=${listState.centeredValue(count)} moved=$moved " +
                                     "fraction=$fraction dir=$direction step=$step distance=$distance"
                         }
                         // Знак доворота против направления жеста - это ощущение пружины
                         if (abs(moved) > SETTLE_TOLERANCE_PX && distance * moved < 0) {
-                            trace(subsystem) { "WARN pull-back distance=$distance moved=$moved" }
+                            trace(traceTag) { "WARN pull-back distance=$distance moved=$moved" }
                         }
                     }
 
@@ -174,7 +174,7 @@ fun WheelPicker(
                         // Отмена прокрутки, а не всего обработчика: без ensureActive
                         // CancellationException убила бы корутину
                         currentCoroutineContext().ensureActive()
-                        trace(subsystem) { "settle interrupted: ${interrupted.message}" }
+                        trace(traceTag) { "settle interrupted: ${interrupted.message}" }
 
                         // Если прервавший сам крутит барабан, он позовет нас снова, когда
                         // закончит. Если нет - выравниваться придется самим
@@ -183,17 +183,17 @@ fun WheelPicker(
                     }
 
                     val left = listState.centerFraction(itemHeightPx)
-                    trace(subsystem) {
+                    trace(traceTag) {
                         "settle done in ${SystemClock.uptimeMillis() - settleStart}ms " +
                                 "value=${listState.centeredValue(count)} fraction=$left"
                     }
                     if (left != null && abs(left * itemHeightPx) > SETTLE_TOLERANCE_PX) {
-                        trace(subsystem) { "WARN misaligned fraction=$left" }
+                        trace(traceTag) { "WARN misaligned fraction=$left" }
                     }
                     return@collect
                 }
 
-                trace(subsystem) { "WARN settle gave up after $SETTLE_ATTEMPTS attempts" }
+                trace(traceTag) { "WARN settle gave up after $SETTLE_ATTEMPTS attempts" }
             }
     }
 
@@ -207,9 +207,9 @@ fun WheelPicker(
 
         val target = targetValue
         val current = listState.centeredValue(count)
-        trace(subsystem) { "sync request key=$syncKey target=$target centered=$current" }
+        trace(traceTag) { "sync request key=$syncKey target=$target centered=$current" }
         if (current == null || current == target) {
-            trace(subsystem) { "sync skipped: уже на месте" }
+            trace(traceTag) { "sync skipped: already in place" }
             return@LaunchedEffect
         }
 
@@ -222,7 +222,7 @@ fun WheelPicker(
         var delta = (target - fromValue).mod(count)
         if (delta > count / 2) delta -= count
 
-        trace(subsystem) { "sync $fromValue -> $target delta=$delta" }
+        trace(traceTag) { "sync $fromValue -> $target delta=$delta" }
         isSyncing = true
         try {
             listState.animateScrollBy(

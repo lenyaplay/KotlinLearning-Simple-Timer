@@ -29,7 +29,7 @@ class TimerReceiver : BroadcastReceiver() {
 
         if (isAppInForeground) {
             // Приложение и так на экране - уведомление избыточно, открываем сразу
-            trace("ТаймерЗавершён") { "приложение открыто, уведомление пропущено" }
+            trace("TimerFinished") { "app is open, notification skipped" }
             context.startActivity(activityIntent)
         } else {
             showTimerFinishedNotification(context, activityIntent)

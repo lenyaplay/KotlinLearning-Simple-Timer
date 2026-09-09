@@ -75,21 +75,25 @@ class TimerViewModelTest {
         val alarms = FakeAlarmScheduler()
         val storage = FakeTimerStorage()
         val vm = TimerViewModel(alarms, storage, clock = { 0L })
-        vm.inputValues = TimerInputValues(hours = 0, minutes = 1, seconds = 0)
+        try {
+            vm.inputValues = TimerInputValues(hours = 0, minutes = 1, seconds = 0)
 
-        vm.onStartClick()
+            vm.onStartClick()
 
-        assertEquals(60_000L, alarms.scheduledAfterMs)
-        assertEquals(
-            TimerSnapshot(
-                startElapsedMs = 0L,
-                totalDurationMs = 60_000L,
-                remainingDurationMs = 60_000L,
-                state = TimerState.Running,
-            ),
-            storage.snapshot,
-        )
-        assertEquals(TimerState.Running, vm.uiState.value.state)
+            assertEquals(60_000L, alarms.scheduledAfterMs)
+            assertEquals(
+                TimerSnapshot(
+                    startElapsedMs = 0L,
+                    totalDurationMs = 60_000L,
+                    remainingDurationMs = 60_000L,
+                    state = TimerState.Running,
+                ),
+                storage.snapshot,
+            )
+            assertEquals(TimerState.Running, vm.uiState.value.state)
+        } finally {
+            vm.onStopClick()
+        }
     }
 
     /**
@@ -102,15 +106,21 @@ class TimerViewModelTest {
         val alarms = FakeAlarmScheduler()
         val storage = FakeTimerStorage()
         val vm = TimerViewModel(alarms, storage, clock = { fakeNow })
-        vm.inputValues = TimerInputValues(hours = 0, minutes = 1, seconds = 0)
-        vm.onStartClick()
+        try {
+            vm.inputValues = TimerInputValues(hours = 0, minutes = 1, seconds = 0)
+            vm.onStartClick()
 
-        fakeNow = 20_000L
-        vm.onPauseClick()
+            fakeNow = 20_000L
+            dispatcher.scheduler.advanceTimeBy(TICK_INTERVAL_MS.toLong() + 10)
+            runCurrent()
+            vm.onPauseClick()
 
-        assertEquals(1, alarms.cancelCallCount)
-        assertEquals(TimerState.Paused, storage.snapshot.state)
-        assertEquals(40_000L, storage.snapshot.remainingDurationMs)
+            assertEquals(1, alarms.cancelCallCount)
+            assertEquals(TimerState.Paused, storage.snapshot.state)
+            assertEquals(40_000L, storage.snapshot.remainingDurationMs)
+        } finally {
+            vm.onStopClick()
+        }
     }
 
     @Test
@@ -119,16 +129,22 @@ class TimerViewModelTest {
         val alarms = FakeAlarmScheduler()
         val storage = FakeTimerStorage()
         val vm = TimerViewModel(alarms, storage, clock = { fakeNow })
-        vm.inputValues = TimerInputValues(hours = 0, minutes = 1, seconds = 0)
-        vm.onStartClick()
-        fakeNow = 20_000L
-        vm.onPauseClick()
-        alarms.scheduledAfterMs = null
+        try {
+            vm.inputValues = TimerInputValues(hours = 0, minutes = 1, seconds = 0)
+            vm.onStartClick()
+            fakeNow = 20_000L
+            dispatcher.scheduler.advanceTimeBy(TICK_INTERVAL_MS.toLong() + 10)
+            runCurrent()
+            vm.onPauseClick()
+            alarms.scheduledAfterMs = null
 
-        vm.onResumeClick()
+            vm.onResumeClick()
 
-        assertEquals(40_000L, alarms.scheduledAfterMs)
-        assertEquals(TimerState.Running, vm.uiState.value.state)
+            assertEquals(40_000L, alarms.scheduledAfterMs)
+            assertEquals(TimerState.Running, vm.uiState.value.state)
+        } finally {
+            vm.onStopClick()
+        }
     }
 
     @Test
@@ -137,18 +153,22 @@ class TimerViewModelTest {
         val alarms = FakeAlarmScheduler()
         val storage = FakeTimerStorage()
         val vm = TimerViewModel(alarms, storage, clock = { fakeNow })
-        vm.inputValues = TimerInputValues(hours = 0, minutes = 0, seconds = 1)
-        var finishedEventsReceived = 0
-        backgroundScope.launch { vm.timerFinishedEvents.collect { finishedEventsReceived++ } }
+        try {
+            vm.inputValues = TimerInputValues(hours = 0, minutes = 0, seconds = 1)
+            var finishedEventsReceived = 0
+            backgroundScope.launch { vm.timerFinishedEvents.collect { finishedEventsReceived++ } }
 
-        vm.onStartClick()
-        fakeNow = 1_000L
-        dispatcher.scheduler.advanceTimeBy(TICK_INTERVAL_MS.toLong() + 10)
-        runCurrent()
+            vm.onStartClick()
+            fakeNow = 1_000L
+            dispatcher.scheduler.advanceTimeBy(TICK_INTERVAL_MS.toLong() + 10)
+            runCurrent()
 
-        assertEquals(TimerUiState(0L, 1_000L, TimerState.Idle), vm.uiState.value)
-        assertEquals(1, storage.clearCallCount)
-        assertEquals(1, finishedEventsReceived)
+            assertEquals(TimerUiState(0L, 1_000L, TimerState.Idle), vm.uiState.value)
+            assertEquals(1, storage.clearCallCount)
+            assertEquals(1, finishedEventsReceived)
+        } finally {
+            vm.onStopClick()
+        }
     }
 
     /**
@@ -162,15 +182,20 @@ class TimerViewModelTest {
         val alarms = FakeAlarmScheduler()
         val storage = FakeTimerStorage()
         val vm = TimerViewModel(alarms, storage, clock = { fakeNow })
-        vm.inputValues = TimerInputValues(hours = 0, minutes = 0, seconds = 1)
+        try {
+            vm.inputValues = TimerInputValues(hours = 0, minutes = 0, seconds = 1)
 
-        vm.onStartClick()
-        // Время истекло уже к моменту первой же проверки внутри цикла тикера
-        fakeNow = 5_000L
-        dispatcher.scheduler.advanceTimeBy(TICK_INTERVAL_MS.toLong() + 10)
-        runCurrent()
+            vm.onStartClick()
+            // Время истекло уже к моменту первой же проверки внутри цикла тикера. Намеренно
+            // без advanceTimeBy: должна выполниться РОВНО одна итерация цикла - тест на баг,
+            // из-за которого переход в Idle происходил только на СЛЕДУЮЩЕЙ итерации
+            fakeNow = 5_000L
+            runCurrent()
 
-        assertEquals(TimerState.Idle, vm.uiState.value.state)
+            assertEquals(TimerState.Idle, vm.uiState.value.state)
+        } finally {
+            vm.onStopClick()
+        }
     }
 
     @Test
@@ -184,9 +209,12 @@ class TimerViewModelTest {
             )
         )
         val vm = TimerViewModel(FakeAlarmScheduler(), storage, clock = { 21_000L })
-
-        assertEquals(TimerState.Running, vm.uiState.value.state)
-        assertEquals(40_000L, vm.uiState.value.remainingDurationMs)
+        try {
+            assertEquals(TimerState.Running, vm.uiState.value.state)
+            assertEquals(40_000L, vm.uiState.value.remainingDurationMs)
+        } finally {
+            vm.onStopClick()
+        }
     }
 
     @Test
@@ -200,8 +228,13 @@ class TimerViewModelTest {
             )
         )
         val vm = TimerViewModel(FakeAlarmScheduler(), storage, clock = { 999_999L })
-
-        assertEquals(TimerUiState(), vm.uiState.value)
-        assertEquals(1, storage.clearCallCount)
+        try {
+            // Когда восстанавливать нечего, uiState остаётся дефолтным значением ViewModel
+            // (TimerUiState(remainingDurationMs = 60_000L)), а не TimerUiState() с нулями
+            assertEquals(TimerUiState(remainingDurationMs = 60_000L), vm.uiState.value)
+            assertEquals(1, storage.clearCallCount)
+        } finally {
+            vm.onStopClick()
+        }
     }
 }
