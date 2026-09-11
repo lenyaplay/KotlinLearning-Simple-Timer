@@ -68,6 +68,7 @@ class TimerViewModel(
     val timerFinishedEvents: SharedFlow<Unit> = _timerFinishedEvents.asSharedFlow()
 
     private var tickerJob: Job? = null
+    private var tickerEndElapsedMs: Long? = null
 
     init {
         restoreState()
@@ -92,8 +93,14 @@ class TimerViewModel(
 
         _uiState.value = restored
         if (restored.state == TimerState.Running) {
+            alarms.schedule(restored.remainingDurationMs)
             startTicker(restored.remainingDurationMs)
         }
+    }
+    
+    fun onExactAlarmPermissionChanged() {
+        if (uiState.value.state != TimerState.Running) return
+        alarms.schedule(currentRemainingDurationMs())
     }
 
     var overlayAsked: Boolean = false
@@ -131,11 +138,13 @@ class TimerViewModel(
     private fun startTicker(remainingDurationMs: Long) {
         val start = clock()
         val end = start + remainingDurationMs
+        tickerEndElapsedMs = end
         tickerJob?.cancel()
         tickerJob = viewModelScope.launch {
             while (isActive) {
                 val newRemainingDurationMs = end - clock()
                 if (newRemainingDurationMs <= 0) {
+                    tickerEndElapsedMs = null
                     _uiState.update {
                         it.copy(
                             remainingDurationMs = 0,
@@ -152,16 +161,29 @@ class TimerViewModel(
         }
     }
 
+    // Единственная точка правды об остатке времени, пока таймер идёт - _uiState.remainingDurationMs
+    // обновляется только раз в TICK_INTERVAL_MS тикером и может быть устаревшим между тиками
+    private fun currentRemainingDurationMs(): Long =
+        tickerEndElapsedMs?.let { end -> (end - clock()).coerceAtLeast(0) }
+            ?: uiState.value.remainingDurationMs
+
     fun onPauseClick() {
         tickerJob?.cancel()
-        _uiState.update { it.copy(state = TimerState.Paused) }
+        val remainingDurationMs = currentRemainingDurationMs()
+        tickerEndElapsedMs = null
+        _uiState.update {
+            it.copy(
+                remainingDurationMs = remainingDurationMs,
+                state = TimerState.Paused
+            )
+        }
 
         alarms.cancel()
 
         storage.save(
             storage.load().copy(
                 state = TimerState.Paused,
-                remainingDurationMs = uiState.value.remainingDurationMs,
+                remainingDurationMs = remainingDurationMs,
             )
         )
     }
@@ -184,6 +206,7 @@ class TimerViewModel(
 
     fun onStopClick() {
         tickerJob?.cancel()
+        tickerEndElapsedMs = null
         _uiState.update { it.copy(state = TimerState.Idle) }
 
         alarms.cancel()

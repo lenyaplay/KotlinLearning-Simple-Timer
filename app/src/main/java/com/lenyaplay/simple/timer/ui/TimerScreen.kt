@@ -28,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -61,7 +62,8 @@ fun TimerView(
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showOverlayDialog by rememberSaveable { mutableStateOf(false) }
-    var language by remember { mutableStateOf(currentAppLanguage(context)) }
+    val configuration = LocalConfiguration.current
+    var language by remember(configuration) { mutableStateOf(currentAppLanguage(context)) }
 
     // Показываем экран завершения сами, не дожидаясь Alarm - у него минимальная задержка
     // доставки ~5 сек (MIN_FUTURITY системы), а тикер точен. Подписка активна только пока

@@ -33,6 +33,12 @@ fun showTimerNotification(
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setAutoCancel(true)
 
+    // На API < 26 звук не задаётся каналом (каналов ещё нет) - задаём его на билдере напрямую.
+    // На API 26+ звук уже управляется NotificationChannel, второй раз его выставлять не нужно
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+        builder.setSound(Settings.System.DEFAULT_ALARM_ALERT_URI)
+    }
+
     if (fullScreenIntent != null) {
         builder
             .setFullScreenIntent(fullScreenIntent, true)
@@ -56,12 +62,12 @@ private fun ensureChannel(context: Context, channelId: String) {
             context.getString(R.string.notification_channel_alarm_name),
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
-                val attributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-                setSound(Settings.System.DEFAULT_ALARM_ALERT_URI, attributes)
-            }
+            val attributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            setSound(Settings.System.DEFAULT_ALARM_ALERT_URI, attributes)
+        }
     } else {
         NotificationChannel(
             channelId,

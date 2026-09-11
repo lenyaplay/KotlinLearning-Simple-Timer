@@ -111,8 +111,6 @@ class TimerViewModelTest {
             vm.onStartClick()
 
             fakeNow = 20_000L
-            dispatcher.scheduler.advanceTimeBy(TICK_INTERVAL_MS.toLong() + 10)
-            runCurrent()
             vm.onPauseClick()
 
             assertEquals(1, alarms.cancelCallCount)
@@ -133,8 +131,6 @@ class TimerViewModelTest {
             vm.inputValues = TimerInputValues(hours = 0, minutes = 1, seconds = 0)
             vm.onStartClick()
             fakeNow = 20_000L
-            dispatcher.scheduler.advanceTimeBy(TICK_INTERVAL_MS.toLong() + 10)
-            runCurrent()
             vm.onPauseClick()
             alarms.scheduledAfterMs = null
 
@@ -212,6 +208,27 @@ class TimerViewModelTest {
         try {
             assertEquals(TimerState.Running, vm.uiState.value.state)
             assertEquals(40_000L, vm.uiState.value.remainingDurationMs)
+        } finally {
+            vm.onStopClick()
+        }
+    }
+    
+    @Test
+    fun restoreRunningReschedulesAlarmForRemainingTime() = runTest(dispatcher) {
+        val storage = FakeTimerStorage(
+            initial = TimerSnapshot(
+                startElapsedMs = 1_000L,
+                totalDurationMs = 60_000L,
+                remainingDurationMs = 60_000L,
+                state = TimerState.Running,
+            )
+        )
+        val alarms = FakeAlarmScheduler()
+        assertEquals(null, alarms.scheduledAfterMs)
+
+        val vm = TimerViewModel(alarms, storage, clock = { 21_000L })
+        try {
+            assertEquals(40_000L, alarms.scheduledAfterMs)
         } finally {
             vm.onStopClick()
         }

@@ -26,6 +26,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import com.lenyaplay.simple.timer.data.TimerState
 import com.lenyaplay.simple.timer.data.TimerUiState
+import com.lenyaplay.simple.timer.ui.AppLanguage
 import com.lenyaplay.simple.timer.ui.TimerViewContent
 import com.lenyaplay.simple.timer.ui.components.TimerCounter
 import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
@@ -89,6 +90,8 @@ class TimerScreenTest {
                     } else {
                         TimerUiState(state = TimerState.Idle)
                     },
+                    language = AppLanguage.English,
+                    onLanguageChange = {},
                 )
             }
         }
