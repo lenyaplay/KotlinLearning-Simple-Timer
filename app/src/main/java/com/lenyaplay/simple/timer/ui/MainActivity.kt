@@ -1,0 +1,102 @@
+package com.lenyaplay.simple.timer.ui
+
+import android.Manifest
+import android.app.AlarmManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.provider.Settings
+import android.os.Build
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import com.lenyaplay.simple.timer.R
+import com.lenyaplay.simple.timer.ui.theme.TimerForKotlinLearningTheme
+
+class MainActivity : AppCompatActivity() {
+    private val notificationStepDone = mutableStateOf(false)
+    private val vm: TimerViewModel by viewModels { timerViewModelFactory(this) }
+
+    private val exactAlarmPermissionChangedReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            vm.onExactAlarmPermissionChanged()
+        }
+    }
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            Toast.makeText(
+                this,
+                getString(R.string.notification_permission_denied_toast),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        notificationStepDone.value = true
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            notificationStepDone.value = true
+        }
+    }
+
+    private fun openOverlaySettings() {
+        startActivity(
+            Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                "package:$packageName".toUri()
+            )
+        )
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        requestNotificationPermissionIfNeeded()
+
+        setContent {
+            TimerForKotlinLearningTheme {
+                TimerView(
+                    vm = vm,
+                    notificationStepDone = notificationStepDone.value,
+                    openOverlaySettings = { openOverlaySettings() },
+                )
+            }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ContextCompat.registerReceiver(
+                this,
+                exactAlarmPermissionChangedReceiver,
+                IntentFilter(AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED),
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            unregisterReceiver(exactAlarmPermissionChangedReceiver)
+        }
+    }
+}

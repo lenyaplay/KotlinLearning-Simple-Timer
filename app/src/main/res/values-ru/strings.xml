@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Простой Таймер</string>
+
+    <string name="top_bar_title">Таймер</string>
+    <string name="language_switch_content_description">Сменить язык</string>
+
+    <string name="overlay_permission_dialog_title">Показывать таймер поверх приложений</string>
+    <string name="overlay_permission_dialog_body">Без этого разрешения, когда время выйдет и вы будете пользоваться телефоном, придёт только обычное уведомление. С ним таймер развернётся на весь экран.</string>
+    <string name="overlay_permission_confirm_button">Открыть настройки</string>
+    <string name="overlay_permission_dismiss_button">Не надо</string>
+
+    <string name="notification_permission_denied_toast">Без разрешения уведомление не покажется</string>
+
+    <string name="run_timer_content_description">Запустить таймер</string>
+    <string name="pause_timer_content_description">Приостановить таймер</string>
+    <string name="stop_timer_content_description">Остановить таймер</string>
+
+    <string name="hours_label">ч</string>
+    <string name="hours_content_description">Часы</string>
+    <string name="minutes_label">мин</string>
+    <string name="minutes_content_description">Минуты</string>
+    <string name="seconds_label">с</string>
+    <string name="seconds_content_description">Секунды</string>
+    <string name="preset_minutes">%1$d мин</string>
+
+    <string name="timer_finished_title">Таймер завершён</string>
+    <string name="timer_finished_message">Время вышло!</string>
+    <string name="timer_finished_ok_button">Ок</string>
+
+    <string name="notification_channel_alarm_name">Сигнал таймера</string>
+    <string name="notification_channel_default_name">Таймер</string>
+
+    <string name="boot_reset_notification_title">Таймер сброшен</string>
+    <string name="boot_reset_notification_message">Таймер был остановлен после перезагрузки. Запустите новый!</string>
+</resources>

@@ -1,3 +1,37 @@
 <resources>
-    <string name="app_name">Timer For Kotlin Learning</string>
+    <string name="app_name">Simple Timer</string>
+
+    <string name="top_bar_title">Timer</string>
+    <string name="language_switch_content_description">Switch language</string>
+    <string name="language_code_en" translatable="false">EN</string>
+    <string name="language_code_ru" translatable="false">RU</string>
+
+    <string name="overlay_permission_dialog_title">Show timer over other apps</string>
+    <string name="overlay_permission_dialog_body">Without this permission, when the time is up while you\'re using your phone, you\'ll only get a regular notification. With it, the timer will open full screen.</string>
+    <string name="overlay_permission_confirm_button">Open settings</string>
+    <string name="overlay_permission_dismiss_button">No thanks</string>
+
+    <string name="notification_permission_denied_toast">Without permission, no notification will be shown</string>
+
+    <string name="run_timer_content_description">Start timer</string>
+    <string name="pause_timer_content_description">Pause timer</string>
+    <string name="stop_timer_content_description">Stop timer</string>
+
+    <string name="hours_label">h</string>
+    <string name="hours_content_description">Hours</string>
+    <string name="minutes_label">min</string>
+    <string name="minutes_content_description">Minutes</string>
+    <string name="seconds_label">s</string>
+    <string name="seconds_content_description">Seconds</string>
+    <string name="preset_minutes">%1$d min</string>
+
+    <string name="timer_finished_title">Timer finished</string>
+    <string name="timer_finished_message">Time\'s up!</string>
+    <string name="timer_finished_ok_button">OK</string>
+
+    <string name="notification_channel_alarm_name">Timer alarm</string>
+    <string name="notification_channel_default_name">Timer</string>
+
+    <string name="boot_reset_notification_title">Timer reset</string>
+    <string name="boot_reset_notification_message">The timer was stopped after reboot. Start a new one!</string>
 </resources>
